@@ -29,9 +29,8 @@ const AdminLayout = () => {
         {/* Page Content */}
         <main className="flex-1 p-6">
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 min-h-full">
+          
             <Outlet />
-          </div>
 
         </main>
 

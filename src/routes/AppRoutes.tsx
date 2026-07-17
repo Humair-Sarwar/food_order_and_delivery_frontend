@@ -2,14 +2,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import AdminRoutes from "./AdminRoutes";
 import AuthRoutes from "./AuthRoutes";
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
   return (
     <BrowserRouter>
 
       <Routes>
-
-        {AdminRoutes()}
+        <Route element={<ProtectedRoute />}>
+          {AdminRoutes()}
+        </Route>
 
         {/* {UserRoutes()} */}
 

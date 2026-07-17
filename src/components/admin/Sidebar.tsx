@@ -5,12 +5,15 @@ import {
   UtensilsCrossed, 
   ShoppingBag, 
   Users, 
-  Truck, 
+  // Truck, 
   Settings, 
   LogOut,
   ChevronRight,
   ShieldCheck,
-  ChevronLeft
+  ChevronLeft,
+  Image,
+  Layers,
+  Utensils
 } from 'lucide-react';
 import logo from "../../assets/images/logo.png";
 
@@ -36,13 +39,16 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
       title: "Management",
       items: [
         { path: '/admin/restaurants', label: 'Restaurants', icon: UtensilsCrossed, badge: 'New' },
+        { path: '/admin/categories', label: 'Categories', icon: Layers, badge: null },
+        { path: '/admin/food-items', label: 'Food Items', icon: Utensils, badge: null },
         { path: '/admin/customers', label: 'Customers', icon: Users, badge: null },
-        { path: '/admin/delivery-men', label: 'Delivery Men', icon: Truck, badge: null },
+        // { path: '/admin/delivery-men', label: 'Delivery Men', icon: Truck, badge: null },
       ]
     },
     {
       title: "System",
       items: [
+        { path: '/admin/media', label: 'Media', icon: Image, badge: null },
         { path: '/admin/settings', label: 'Settings', icon: Settings, badge: null },
       ]
     }
@@ -119,7 +125,7 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
                   </div>
 
                   {item.badge && !isCollapsed && (
-                    <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider transition-colors duration-300 border ${
+                    <span className={`px-2 py-0.5 text-[9px] font-black rounded-md capitalize tracking-wider transition-colors duration-300 border ${
                       isActive 
                         ? 'bg-white/20 text-white border-white/10' 
                         : item.badge === 'New' 

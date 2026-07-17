@@ -1,17 +1,24 @@
 import api from "../api/client";
-import type { AxiosResponse } from "axios";
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Generic response wrapper
 export const post = async <T>(
   url: string,
-  data: any
+  data: any,
+  config?: AxiosRequestConfig
 ): Promise<T> => {
-  const res: AxiosResponse<T> = await api.post(url, data);
+  const res: AxiosResponse<T> = await api.post(url, data, config);
   return res.data;
 };
 
-export const get = async <T>(url: string): Promise<T> => {
-  const res: AxiosResponse<T> = await api.get(url);
+export const get = async <T>(
+  url: string,
+  params?: Record<string, any>
+): Promise<T> => {
+  const res = await api.get<T>(url, {
+    params,
+  });
+
   return res.data;
 };
 
