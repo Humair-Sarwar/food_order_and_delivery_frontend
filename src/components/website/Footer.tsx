@@ -1,0 +1,75 @@
+import React from 'react';
+
+// Reusable SVG wrapper for clean look
+const IconWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="w-5 h-5 text-orange-500">{children}</div>
+);
+
+export const Footer: React.FC = () => {
+  return (
+    <footer className="bg-[#0a0a0a] text-gray-400 py-20 px-6 border-t rounded-tl-4xl rounded-tr-4xl border-white/5">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
+        
+        {/* Brand Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 bg-orange-600 rounded-lg" />
+            <span className="text-2xl font-black text-white tracking-tighter">FOODIE</span>
+          </div>
+          <p className="text-sm leading-relaxed">
+            Elevating your dining experience with speed, precision, and passion. Delivered fresh to you.
+          </p>
+        </div>
+
+        {/* Links */}
+        <div className="space-y-6">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest">Platform</h4>
+          <ul className="space-y-3 text-sm">
+            {['Menu', 'How it Works', 'Careers', 'Gift Cards'].map((link) => (
+              <li key={link}><a href="#" className="hover:text-orange-500 transition-colors duration-300">{link}</a></li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Contact */}
+        <div className="space-y-6">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest">Support</h4>
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center gap-3">
+              <IconWrapper><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></IconWrapper>
+              <span>+92 300 0000000</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <IconWrapper><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></IconWrapper>
+              <span>hello@foodie.pk</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Newsletter */}
+        <div className="space-y-6">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest">Stay Updated</h4>
+          <div className="flex flex-col gap-3">
+            <input 
+              type="email" 
+              placeholder="Enter your email" 
+              className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-orange-500 transition-all"
+            />
+            <button className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-orange-600/20">
+              SUBSCRIBE
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+        <p className="text-xs">© 2026 Foodie. All rights reserved.</p>
+        <div className="flex gap-8 text-xs font-medium">
+          <a href="#" className="hover:text-white transition">Privacy Policy</a>
+          <a href="#" className="hover:text-white transition">Terms of Service</a>
+        </div>
+      </div>
+    </footer>
+  );
+};
