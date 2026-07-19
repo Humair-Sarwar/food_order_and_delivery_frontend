@@ -281,7 +281,7 @@ export const RestaurantFormModal: React.FC<RestaurantFormModalProps> = ({
                       <button
                         type="button"
                         onClick={(e) => clearMedia(e, "banner_id")}
-                        className="absolute top-3 right-3 p-1.5 rounded-xl bg-white/90 text-gray-500 hover:text-red-500 hover:bg-white shadow-sm transition-colors"
+                        className="absolute cursor-pointer top-3 right-3 p-1.5 rounded-xl bg-white/90 text-gray-500 hover:text-red-500 hover:bg-white shadow-sm transition-colors"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -335,7 +335,7 @@ export const RestaurantFormModal: React.FC<RestaurantFormModalProps> = ({
                   <button
                     type="button"
                     onClick={(e) => clearMedia(e, "logo_id")}
-                    className="absolute top-0 right-0 z-10 p-1.5 rounded-full bg-white text-gray-400 hover:text-rose-500 hover:bg-rose-50 border border-gray-100 shadow-sm transition-all"
+                    className="absolute cursor-pointer top-0 right-0 z-10 p-1.5 rounded-full bg-white text-gray-400 hover:text-rose-500 hover:bg-rose-50 border border-gray-100 shadow-sm transition-all"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>

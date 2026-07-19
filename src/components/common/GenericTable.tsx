@@ -31,7 +31,7 @@ export const GenericTable = <T,>({
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <tr className="border-b border-gray-100 bg-gray-50/50 text-[12px] font-black tracking-widest text-gray-400">
               {columns.map((column, idx) => (
                 <th
                   key={idx}
