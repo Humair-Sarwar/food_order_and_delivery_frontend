@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import {
-  Plus,
   Edit2,
   Trash2,
   Eye,
@@ -22,20 +21,35 @@ export interface FoodItem {
   id: string;
   title: string;
   slug: string;
-  price: number;
+  is_on_sale: number;
   sale_price: number | null;
+  regular_price: number | null;
   sku: string | null;
   category_id: string;
   category_title?: string;
   restaurant_id?: string;
   restaurant_name: string;
   is_available: boolean;
-  status: "published" | "draft";
   description: string | null;
   media?: {
     media_path: string;
   } | null;
-  status_stock?: boolean; 
+  is_published: number;
+  meta_title?: string;
+  meta_description?: string;
+  keywords?: string;
+  restaurant?: {
+    id: string;
+    name: string;
+  };
+  category?: {
+    id: string;
+    title: string;
+  };
+  image?: {
+    id: string;
+    media_path: string;
+  } | null;
 }
 
 export const FoodItems: React.FC = () => {
@@ -53,19 +67,16 @@ export const FoodItems: React.FC = () => {
   // --- Modal & Utility States ---
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedFoodItemId, setSelectedFoodItemId] = useState<string | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [foodItemToEdit, setFoodItemToEdit] = useState<FoodItem | null>(null);
-  const [isViewMode, setIsViewMode] = useState(false);
 
   // --- Dynamic API Hook Integration ---
-  const { data, isLoading, error } = useFoodItems({
+  const { data, isLoading } = useFoodItems({
     page,
     per_page: perPage,
     search_by_title: searchQuery || undefined,
-    search_by_category: selectedCategory ? [selectedCategory] : undefined,
-    search_by_restaurant: selectedRestaurant ? [selectedRestaurant] : undefined,
-    search_item_available: selectedAvailability !== "" ? selectedAvailability === "available" : undefined,
-    search_product_status: selectedStatus !== "" ? selectedStatus === "published" : undefined,
+    search_by_category: selectedCategory || undefined,
+  search_by_restaurant: selectedRestaurant || undefined,
+  search_item_available: selectedAvailability || undefined,
+  search_product_status: selectedStatus || undefined,
   });
 
   const { mutate: deleteFoodItem, isPending: isDeletePending } = useFoodItemDelete();
@@ -88,19 +99,14 @@ export const FoodItems: React.FC = () => {
   const navigation = useNavigate();
   // --- Action Handlers ---
   const handleAddNew = () => {
-    navigation('/admin/food-items/create')
+    navigation('/admin/food-items/create');
   };
 
   const handleEdit = (item: FoodItem) => {
-    setFoodItemToEdit(item);
-    setIsViewMode(false);
-    setIsDrawerOpen(true);
+    navigation(`/admin/food-items/update/${item?.id}`);
   };
 
   const handleView = (item: FoodItem) => {
-    setFoodItemToEdit(item);
-    setIsViewMode(true);
-    setIsDrawerOpen(true);
   };
 
   const handleDeleteTrigger = (id: string) => {
@@ -109,12 +115,12 @@ export const FoodItems: React.FC = () => {
   };
 
   const handleToggleStatus = (item: FoodItem) => {
-    const nextStatus = item.status === "published" ? "draft" : "published";
+    const nextStatus = item.is_published === 1 ? "draft" : "published";
     
     updateStatus(
       { 
         id: item.id, 
-        data: { status: nextStatus } 
+        data: { is_published: !nextStatus, } 
       },
       {
         onSuccess: (response: any) => {
@@ -157,9 +163,9 @@ export const FoodItems: React.FC = () => {
       header: "Title",
       className: "w-4/12 min-w-[240px]",
       render: (item) => {
-        const hasImage = item.media && item.media.media_path;
+        const hasImage = item.image && item.image.media_path;
         const imageUrl = hasImage
-          ? `${import.meta.env.VITE_API_BASE_URL}/storage/${item?.media?.media_path}`
+          ? `${import.meta.env.VITE_API_BASE_URL}/storage/${item?.image?.media_path}`
           : null;
 
         return (
@@ -195,27 +201,32 @@ export const FoodItems: React.FC = () => {
       className: "w-2/12",
       render: (item) => (
         <span className="px-2.5 py-0.5 text-[10px] font-bold tracking-wide bg-gray-100 text-gray-600 rounded-lg whitespace-nowrap border border-gray-200/30">
-          {item.category_title || "Unassigned"}
+          {item?.category?.title || "Unassigned"}
         </span>
       )
     },
     {
       header: "Restaurant",
       className: "w-2/12 text-gray-700 font-medium text-xs",
-      accessorKey: "restaurant_name"
+      accessorKey: "restaurant_name",
+      render: (item) => (
+        <span className="text-[13px] tracking-wid whitespace-nowrap">
+          {item?.restaurant?.name || "Unassigned"}
+        </span>
+      )
     },
     {
       header: "Price",
       className: "w-2/12",
       render: (item) => (
         <div className="flex flex-col">
-          {item.sale_price ? (
+          {item?.is_on_sale &&  !(item?.regular_price == item?.sale_price)? (
             <>
               <span className="text-orange-600 font-bold">Rs. {item.sale_price}</span>
-              <span className="text-[10px] text-gray-400 line-through">Rs. {item.price}</span>
+              <span className="text-[10px] text-gray-400 line-through">Rs. {item.regular_price}</span>
             </>
           ) : (
-            <span className="font-semibold text-gray-900">Rs. {item.price}</span>
+            <span className="font-semibold text-gray-900">Rs. {item.regular_price}</span>
           )}
         </div>
       )
@@ -225,11 +236,11 @@ export const FoodItems: React.FC = () => {
       className: "w-1/12",
       render: (item) => (
         <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md ${
-          item?.status_stock
+          item?.is_available
             ? "bg-emerald-50 text-emerald-600" 
             : "bg-rose-50 text-rose-600"
         }`}>
-          {item?.status_stock ? "Yes" : "No"}
+          {item?.is_available ? "Yes" : "No"}
         </span>
       )
     },
@@ -242,10 +253,10 @@ export const FoodItems: React.FC = () => {
             checked={item?.is_published == 1} 
             onChange={() => handleToggleStatus(item)} 
           />
-          <span className={`text-[10px] font-bold tracking-wider uppercase ${
-            item.status === "published" ? "text-orange-600" : "text-gray-400"
+          <span className={`text-[10px] font-bold tracking-wider ${
+            item.is_published === 1 ? "text-orange-600" : "text-gray-400"
           }`}>
-            {item.status}
+            {item.is_published ? "Published" : "Draft"}
           </span>
         </div>
       )
@@ -356,7 +367,7 @@ export const FoodItems: React.FC = () => {
                   className="w-full appearance-none text-xs font-semibold px-4 py-2.5 pr-8 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500/80 transition-all cursor-pointer shadow-sm text-gray-700"
                 >
                   <option value="">All Restaurants</option>
-                  {uniqueRestaurants.map(res => (
+                  {uniqueRestaurants.map((res: any) => (
                     <option key={res.id} value={res.id}>{res.name}</option>
                   ))}
                 </select>
@@ -454,18 +465,18 @@ export const FoodItems: React.FC = () => {
       {/* Dynamic Pagination Architecture Integration */}
       {!isLoading && foodItemsList?.length > 0 && (
         <Pagination
-          currentPage={data?.pagination?.current_page}
-          totalPages={data?.pagination?.last_page}
-          totalEntries={data?.pagination?.total}
-          from={data?.pagination?.from ?? 0}
-          to={data?.pagination?.to ?? 0}
-          entriesPerPage={data?.pagination?.per_page}
-          onPageChange={(pageNumber) => setPage(pageNumber)}
-          onEntriesPerPageChange={(perPageNumber) => {
-            setPerPage(perPageNumber);
-            setPage(1);
-          }}
-        />
+  currentPage={data?.pagination?.current_page ?? 1}
+  totalPages={data?.pagination?.last_page ?? 1}
+  totalEntries={data?.pagination?.total ?? 0}
+  from={data?.pagination?.from ?? 0}
+  to={data?.pagination?.to ?? 0}
+  entriesPerPage={data?.pagination?.per_page ?? perPage}
+  onPageChange={(pageNumber) => setPage(pageNumber)}
+  onEntriesPerPageChange={(perPageNumber) => {
+    setPerPage(perPageNumber);
+    setPage(1);
+  }}
+/>
       )}
 
       <ConfirmDeleteModal

@@ -53,3 +53,9 @@ export const RestaurantUpdate = (
 ): Promise<ApiResponse> => {
   return put<ApiResponse>(`/api/admin/restaurants/${id}`, data);
 };
+
+
+
+export const RestaurantPanel = (): Promise<ApiResponse> => {
+  return get<ApiResponse>("/api/admin/restaurants/panel");
+};

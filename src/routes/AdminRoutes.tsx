@@ -44,6 +44,10 @@ const AdminRoutes = () => {
         path="food-items/create"
         element={<FoodItemForm />}
       />
+      <Route
+        path="food-items/update/:id"
+        element={<FoodItemForm />}
+      />
 
       <Route
         path="customers"

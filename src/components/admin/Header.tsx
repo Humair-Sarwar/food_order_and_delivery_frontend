@@ -9,7 +9,8 @@ import {
   ExternalLink,
   CheckCircle2,
   Utensils,
-  Clock
+  Clock,
+  Globe
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -91,6 +92,7 @@ const Header: React.FC<HeaderProps> = ({ isCollapsed, setIsCollapsed, setIsMobil
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-4 h-10 text-xs font-bold bg-gray-900 text-white hover:bg-orange-600 rounded-xl transition-all shadow-md shadow-gray-900/10 active:scale-98 cursor-pointer"
         >
+          <Globe className="w-3.5 h-3.5 opacity-80" />
           <span>Browse Web</span>
           <ExternalLink className="w-3.5 h-3.5 opacity-80" />
         </a>

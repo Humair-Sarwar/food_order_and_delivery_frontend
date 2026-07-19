@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RestaurantCreate, RestaurantDelete, RestaurantGet, RestaurantUpdate, updateRestaurantStatus, type RestaurantPayload } from "../../services/admin/restaurantService";
+import { RestaurantCreate, RestaurantDelete, RestaurantGet, RestaurantPanel, RestaurantUpdate, updateRestaurantStatus, type RestaurantPayload } from "../../services/admin/restaurantService";
 
 
 interface RestaurantFetchProps {
@@ -106,5 +106,21 @@ export const useUpdateRestaurant = () => {
         queryKey: ["restaurants"],
       });
     },
+  });
+};
+
+
+interface UseRestaurantPanelProps {
+  enabled?: boolean;
+}
+
+export const useRestaurantPanel = ({
+  enabled = true,
+}: UseRestaurantPanelProps = {}) => {
+  return useQuery({
+    queryKey: ["restaurant-panel"],
+    queryFn: RestaurantPanel,
+    enabled,
+    staleTime: 5 * 60 * 1000,
   });
 };
