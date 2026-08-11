@@ -20,7 +20,7 @@ export const TextScroll: React.FC = () => {
             key={i}
             className="inline-block px-10 shrink-0" // shrink-0 add kiya taaki text dabey nahi
             style={{
-              fontWeight: 400,
+              fontWeight: 700,
               fontSize: "60px",
               fontFamily: "'Roboto', sans-serif",
               background: "linear-gradient(90deg, #4a4a4a 0%, #f97316 40%, #f97316 100%)",

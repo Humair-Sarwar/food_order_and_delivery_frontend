@@ -1,5 +1,6 @@
 import React from 'react';
-import { MapPin, Truck, Clock } from 'lucide-react';
+import { Truck, Clock } from 'lucide-react';
+import wide_range from "../../../assets/images/wide-delivery.jpg";
 
 export const ServiceCoverage: React.FC = () => {
   return (
@@ -9,9 +10,13 @@ export const ServiceCoverage: React.FC = () => {
         {/* Left Side: Illustration / Visual */}
         <div className="w-full lg:w-1/2">
           <div className="relative bg-orange-50 rounded-[3rem] p-8 md:p-12">
-            {/* Replace this div with your actual illustration or Image */}
-            <div className="aspect-square bg-white rounded-[2rem] shadow-xl shadow-orange-500/10 flex items-center justify-center">
-              <MapPin size={120} className="text-orange-500 animate-pulse" />
+            {/* Image Container */}
+            <div className="aspect-square bg-white rounded-[2rem] shadow-xl shadow-orange-500/10 flex items-center justify-center overflow-hidden">
+              <img 
+                src={wide_range} 
+                alt="Wide Delivery Coverage" 
+                className="w-full h-full object-cover"
+              />
             </div>
             {/* Decorative Element */}
             <div className="absolute -bottom-6 -right-6 bg-gray-900 text-white p-6 rounded-2xl shadow-2xl">

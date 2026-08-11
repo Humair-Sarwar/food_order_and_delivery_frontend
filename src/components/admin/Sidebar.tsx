@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -26,6 +26,8 @@ interface SidebarProps {
 
 const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }) => {
   const location = useLocation();
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ top: number } | null>(null);
 
   const menuSections = [
     {
@@ -99,43 +101,64 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
               const isActive = location.pathname === item.path;
 
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setIsMobileOpen(false)}
-                  title={isCollapsed ? item.label : ""}
-                  /* Dynamic vertical padding based on state */
-                  className={`flex items-center justify-between px-3.5 text-xs font-bold rounded-xl relative transition-all duration-300 group ${
-                    isActive
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 font-extrabold translate-x-0.5'
-                      : 'hover:bg-gray-800/40 hover:text-gray-100'
-                  } ${isCollapsed ? 'justify-center py-3' : 'py-2.5'}`}
-                >
-                  {isActive && (
-                    <span className="absolute inset-0 rounded-xl bg-orange-500/10 blur-[2px] -z-10" />
-                  )}
+                <div key={item.path} className="relative">
+                  <Link
+                    to={item.path}
+                    onClick={() => setIsMobileOpen(false)}
+                    onMouseEnter={(e) => {
+                      if (isCollapsed) {
+                        setHoveredItem(item.path);
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        if (rect) {
+                          setTooltipPosition({ top: rect.top + rect.height / 2 });
+                        }
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredItem(null);
+                      setTooltipPosition(null);
+                    }}
+                    /* Dynamic vertical padding based on state */
+                    className={`flex items-center justify-between px-3.5 text-xs font-bold rounded-xl relative transition-all duration-300 group ${
+                      isActive
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 font-extrabold translate-x-0.5'
+                        : 'hover:bg-gray-800/40 hover:text-gray-100'
+                    } ${isCollapsed ? 'justify-center py-3' : 'py-2.5'}`}
+                  >
+                    {isActive && (
+                      <span className="absolute inset-0 rounded-xl bg-orange-500/10 blur-[2px] -z-10" />
+                    )}
 
-                  <div className="flex items-center gap-3">
-                    <Icon 
-                      className={`w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-105 shrink-0 ${
-                        isActive ? 'text-white' : 'text-gray-500 group-hover:text-orange-400'
-                      }`} 
-                    />
-                    {!isCollapsed && <span className="tracking-wide">{item.label}</span>}
-                  </div>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        className={`w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-105 shrink-0 ${
+                          isActive ? 'text-white' : 'text-gray-500 group-hover:text-orange-400'
+                        }`} 
+                      />
+                      {!isCollapsed && <span className="tracking-wide">{item.label}</span>}
+                    </div>
 
-                  {item.badge && !isCollapsed && (
-                    <span className={`px-2 py-0.5 text-[9px] font-black rounded-md capitalize tracking-wider transition-colors duration-300 border ${
-                      isActive 
-                        ? 'bg-white/20 text-white border-white/10' 
-                        : item.badge === 'New' 
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                          : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                    }`}>
-                      {item.badge}
-                    </span>
+                    {item.badge && !isCollapsed && (
+                      <span className={`px-2 py-0.5 text-[9px] font-black rounded-md capitalize tracking-wider transition-colors duration-300 border ${
+                        isActive 
+                          ? 'bg-white/20 text-white border-white/10' 
+                          : item.badge === 'New' 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                  
+                  {/* Custom Tooltip for collapsed mode */}
+                  {isCollapsed && hoveredItem === item.path && tooltipPosition && (
+                    <div className="fixed px-3 py-1.5 bg-gray-800 text-white text-xs font-bold rounded-lg shadow-lg whitespace-nowrap z-[100] pointer-events-none border border-gray-700" style={{ left: '80px', top: `${tooltipPosition.top}px`, transform: 'translateY(-50%)' }}>
+                      {item.label}
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 border-l border-b border-gray-700 rotate-45" />
+                    </div>
                   )}
-                </Link>
+                </div>
               );
             })}
           </div>
