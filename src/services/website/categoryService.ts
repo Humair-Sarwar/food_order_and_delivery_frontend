@@ -15,3 +15,12 @@ export interface Category {
 export const WebCategories = (): Promise<ApiResponse<Category[]>> => {
   return get<ApiResponse<Category[]>>("/api/web/categories");
 };
+
+export const WebListingCategories = (
+  slug?: string
+): Promise<ApiResponse<Category[]>> => {
+  return get<ApiResponse<Category[]>>(
+    "/api/web/categories/listing",
+    slug ? { url: slug } : {}
+  );
+};

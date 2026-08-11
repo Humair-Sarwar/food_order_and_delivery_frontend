@@ -3,7 +3,7 @@ import { User, Search, MapPin, Phone, ShoppingBag, Utensils, Store } from "lucid
 import { CartModal } from "./CartModal";
 import { SearchModal } from "./SearchModal";
 import logo from "../../assets/images/logo.png";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export const Header: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -28,12 +28,12 @@ export const Header: React.FC = () => {
             
             {/* Right Side Buttons: Food Items & Restaurants */}
             <div className="flex items-center gap-3 sm:gap-4">
-              <a 
-                href="/food-items"
+              <NavLink
+                to="/food-items/All"
                 className="flex items-center gap-1.5 hover:text-orange-500 transition-colors"
               >
                 <Utensils size={12} className="text-orange-500" /> Food Items
-              </a>
+              </NavLink>
               <span className="text-gray-600">|</span>
               <a 
                 href="/restaurants"
@@ -49,11 +49,11 @@ export const Header: React.FC = () => {
         <div className="bg-white border-b border-gray-100 sticky top-0 z-50">
           <div className="mx-4 sm:mx-7 px-4 sm:px-6 h-20 flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-2 cursor-pointer">
+            <NavLink to='/' className="flex items-center gap-2 cursor-pointer">
               <div className="h-32 w-32 sm:h-40 sm:w-40 overflow-hidden flex items-center justify-center">
                 <img src={logo} alt="Foodie Logo" className="w-full h-full object-contain" />
               </div>
-            </div>
+            </NavLink>
 
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center gap-10">

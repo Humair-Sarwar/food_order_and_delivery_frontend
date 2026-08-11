@@ -6,14 +6,21 @@ import {
   Utensils,
   Search,
   SlidersHorizontal,
-  X
+  X,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { GenericTable, type Column } from "../../../components/common/GenericTable";
+import {
+  GenericTable,
+  type Column,
+} from "../../../components/common/GenericTable";
 import ConfirmDeleteModal from "../../../components/common/ConfirmDeleteModal";
 import Button from "../../../components/common/Button";
 import Pagination from "../../../components/common/Pagination";
-import { useFoodItemDelete, useFoodItems, useFoodItemStatusUpdate } from "../../../hooks/admin/useFoodItem";
+import {
+  useFoodItemDelete,
+  useFoodItems,
+  useFoodItemStatusUpdate,
+} from "../../../hooks/admin/useFoodItem";
 import { Switch } from "../../../components/common/Switch";
 import { useNavigate } from "react-router-dom";
 
@@ -63,10 +70,12 @@ export const FoodItems: React.FC = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState("");
   const [selectedAvailability, setSelectedAvailability] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  
+
   // --- Modal & Utility States ---
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedFoodItemId, setSelectedFoodItemId] = useState<string | null>(null);
+  const [selectedFoodItemId, setSelectedFoodItemId] = useState<string | null>(
+    null,
+  );
 
   // --- Dynamic API Hook Integration ---
   const { data, isLoading } = useFoodItems({
@@ -74,40 +83,44 @@ export const FoodItems: React.FC = () => {
     per_page: perPage,
     search_by_title: searchQuery || undefined,
     search_by_category: selectedCategory || undefined,
-  search_by_restaurant: selectedRestaurant || undefined,
-  search_item_available: selectedAvailability || undefined,
-  search_product_status: selectedStatus || undefined,
+    search_by_restaurant: selectedRestaurant || undefined,
+    search_item_available: selectedAvailability || undefined,
+    search_product_status: selectedStatus || undefined,
   });
 
-  const { mutate: deleteFoodItem, isPending: isDeletePending } = useFoodItemDelete();
-  const { mutate: updateStatus, isPending: isStatusPending } = useFoodItemStatusUpdate();
+  const { mutate: deleteFoodItem, isPending: isDeletePending } =
+    useFoodItemDelete();
+  const { mutate: updateStatus, isPending: isStatusPending } =
+    useFoodItemStatusUpdate();
 
   const foodItemsList: FoodItem[] = data?.data || [];
 
   // --- Derived Categories Extract for Filter Dropdown ---
   const uniqueCategories = useMemo(() => {
     const categoriesMap = new Map<string, string>();
-    foodItemsList.forEach(item => {
+    foodItemsList.forEach((item) => {
       if (item.category_id && item.category_title) {
         categoriesMap.set(item.category_id, item.category_title);
       }
     });
-    return Array.from(categoriesMap.entries()).map(([id, title]) => ({ id, title }));
+    return Array.from(categoriesMap.entries()).map(([id, title]) => ({
+      id,
+      title,
+    }));
   }, [foodItemsList]);
 
   const uniqueRestaurants = data?.restaurants || [];
   const navigation = useNavigate();
   // --- Action Handlers ---
   const handleAddNew = () => {
-    navigation('/admin/food-items/create');
+    navigation("/admin/food-items/create");
   };
 
   const handleEdit = (item: FoodItem) => {
     navigation(`/admin/food-items/update/${item?.id}`);
   };
 
-  const handleView = (item: FoodItem) => {
-  };
+  const handleView = (item: FoodItem) => {};
 
   const handleDeleteTrigger = (id: string) => {
     setSelectedFoodItemId(id);
@@ -116,20 +129,27 @@ export const FoodItems: React.FC = () => {
 
   const handleToggleStatus = (item: FoodItem) => {
     const nextStatus = item.is_published === 1 ? "draft" : "published";
-    
+
     updateStatus(
-      { 
-        id: item.id, 
-        data: { is_published: !nextStatus, } 
+      {
+        id: item.id,
+        data: { is_published: !nextStatus },
       },
       {
         onSuccess: (response: any) => {
-          toast.success(response?.message || `${item.title} visibility status shifted to ${nextStatus}.`);
+          toast.success(
+            response?.message ||
+              `${item.title} visibility status shifted to ${nextStatus}.`,
+          );
         },
         onError: (err: any) => {
-          toast.error(err?.response?.data?.message || err?.message || `Failed to update visibility status for ${item.title}.`);
-        }
-      }
+          toast.error(
+            err?.response?.data?.message ||
+              err?.message ||
+              `Failed to update visibility status for ${item.title}.`,
+          );
+        },
+      },
     );
   };
 
@@ -143,8 +163,12 @@ export const FoodItems: React.FC = () => {
         setSelectedFoodItemId(null);
       },
       onError: (err: any) => {
-        toast.error(err?.response?.data?.message || err?.message || "Failed to remove the food item. Please try again.");
-      }
+        toast.error(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to remove the food item. Please try again.",
+        );
+      },
     });
   };
 
@@ -181,7 +205,10 @@ export const FoodItems: React.FC = () => {
                   }}
                 />
               ) : (
-                <Utensils size={15} className="text-gray-400 stroke-[1.8] group-hover:text-orange-500 transition-colors" />
+                <Utensils
+                  size={15}
+                  className="text-gray-400 stroke-[1.8] group-hover:text-orange-500 transition-colors"
+                />
               )}
             </div>
             <div className="flex flex-col min-w-0 overflow-hidden">
@@ -194,7 +221,7 @@ export const FoodItems: React.FC = () => {
             </div>
           </div>
         );
-      }
+      },
     },
     {
       header: "Category",
@@ -203,7 +230,7 @@ export const FoodItems: React.FC = () => {
         <span className="px-2.5 py-0.5 text-[10px] font-bold tracking-wide bg-gray-100 text-gray-600 rounded-lg whitespace-nowrap border border-gray-200/30">
           {item?.category?.title || "Unassigned"}
         </span>
-      )
+      ),
     },
     {
       header: "Restaurant",
@@ -213,36 +240,44 @@ export const FoodItems: React.FC = () => {
         <span className="text-[13px] tracking-wid whitespace-nowrap">
           {item?.restaurant?.name || "Unassigned"}
         </span>
-      )
+      ),
     },
     {
       header: "Price",
       className: "w-2/12",
       render: (item) => (
         <div className="flex flex-col">
-          {item?.is_on_sale &&  !(item?.regular_price == item?.sale_price)? (
+          {item?.is_on_sale && !(item?.regular_price == item?.sale_price) ? (
             <>
-              <span className="text-orange-600 font-bold">Rs. {item.sale_price}</span>
-              <span className="text-[10px] text-gray-400 line-through">Rs. {item.regular_price}</span>
+              <span className="text-orange-600 font-bold">
+                Rs. {item.sale_price}
+              </span>
+              <span className="text-[10px] text-gray-400 line-through">
+                Rs. {item.regular_price}
+              </span>
             </>
           ) : (
-            <span className="font-semibold text-gray-900">Rs. {item.regular_price}</span>
+            <span className="font-semibold text-gray-900">
+              Rs. {item.regular_price}
+            </span>
           )}
         </div>
-      )
+      ),
     },
     {
       header: "Available",
       className: "w-1/12",
       render: (item) => (
-        <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md ${
-          item?.is_available
-            ? "bg-emerald-50 text-emerald-600" 
-            : "bg-rose-50 text-rose-600"
-        }`}>
+        <span
+          className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md ${
+            item?.is_available
+              ? "bg-emerald-50 text-emerald-600"
+              : "bg-rose-50 text-rose-600"
+          }`}
+        >
           {item?.is_available ? "Yes" : "No"}
         </span>
-      )
+      ),
     },
     {
       header: "Draft/Published",
@@ -250,16 +285,18 @@ export const FoodItems: React.FC = () => {
       render: (item) => (
         <div className="flex items-center gap-3">
           <Switch
-            checked={item?.is_published == 1} 
-            onChange={() => handleToggleStatus(item)} 
+            checked={item?.is_published == 1}
+            onChange={() => handleToggleStatus(item)}
           />
-          <span className={`text-[10px] font-bold tracking-wider ${
-            item.is_published === 1 ? "text-orange-600" : "text-gray-400"
-          }`}>
+          <span
+            className={`text-[10px] font-bold tracking-wider ${
+              item.is_published === 1 ? "text-orange-600" : "text-gray-400"
+            }`}
+          >
             {item.is_published ? "Published" : "Draft"}
           </span>
         </div>
-      )
+      ),
     },
     {
       header: <div className="text-right">Actions</div>,
@@ -288,15 +325,18 @@ export const FoodItems: React.FC = () => {
             <Trash2 size={14} className="stroke-[2]" />
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   // --- Skeleton Loading Component Matrix ---
   const TableSkeleton = () => (
     <div className="w-full space-y-4 animate-pulse">
       {[...Array(perPage)].map((_, index) => (
-        <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl gap-4">
+        <div
+          key={index}
+          className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl gap-4"
+        >
           <div className="flex items-center gap-3 w-4/12">
             <div className="h-9 w-9 bg-gray-200 rounded-xl shrink-0" />
             <div className="flex flex-col gap-2 w-full">
@@ -318,13 +358,17 @@ export const FoodItems: React.FC = () => {
     </div>
   );
 
-  const isFiltered = searchQuery !== "" || selectedCategory !== "" || selectedRestaurant !== "" || selectedAvailability !== "" || selectedStatus !== "";
+  const isFiltered =
+    searchQuery !== "" ||
+    selectedCategory !== "" ||
+    selectedRestaurant !== "" ||
+    selectedAvailability !== "" ||
+    selectedStatus !== "";
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm p-6 min-h-full">
         <div className="space-y-6 context-fade-in">
-          
           {/* Top Title Bar */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -332,7 +376,8 @@ export const FoodItems: React.FC = () => {
                 Menu & Food Items
               </h1>
               <p className="text-xs font-medium text-gray-500 mt-0.5">
-                Manage your catalog pricing, restaurant mappings, dynamic discounts, and status node toggles.
+                Manage your catalog pricing, restaurant mappings, dynamic
+                discounts, and status node toggles.
               </p>
             </div>
             <Button label="Add Food Item" onClick={handleAddNew} />
@@ -343,7 +388,10 @@ export const FoodItems: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-center">
               {/* Search Control */}
               <div className="relative lg:col-span-1">
-                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search
+                  size={15}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
                 <input
                   type="text"
                   placeholder="Search item title..."
@@ -368,10 +416,15 @@ export const FoodItems: React.FC = () => {
                 >
                   <option value="">All Restaurants</option>
                   {uniqueRestaurants.map((res: any) => (
-                    <option key={res.id} value={res.id}>{res.name}</option>
+                    <option key={res.id} value={res.id}>
+                      {res.name}
+                    </option>
                   ))}
                 </select>
-                <SlidersHorizontal size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <SlidersHorizontal
+                  size={12}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
               </div>
 
               {/* Category Filter */}
@@ -385,11 +438,16 @@ export const FoodItems: React.FC = () => {
                   className="w-full appearance-none text-xs font-semibold px-4 py-2.5 pr-8 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500/80 transition-all cursor-pointer shadow-sm text-gray-700"
                 >
                   <option value="">All Categories</option>
-                  {uniqueCategories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.title}</option>
+                  {uniqueCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.title}
+                    </option>
                   ))}
                 </select>
-                <SlidersHorizontal size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <SlidersHorizontal
+                  size={12}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
               </div>
 
               {/* Availability Filter */}
@@ -406,7 +464,10 @@ export const FoodItems: React.FC = () => {
                   <option value="available">Available</option>
                   <option value="out_of_stock">Out of Stock</option>
                 </select>
-                <SlidersHorizontal size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <SlidersHorizontal
+                  size={12}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
               </div>
 
               {/* Status Filter */}
@@ -423,7 +484,10 @@ export const FoodItems: React.FC = () => {
                   <option value="published">Published</option>
                   <option value="draft">Draft</option>
                 </select>
-                <SlidersHorizontal size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <SlidersHorizontal
+                  size={12}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
               </div>
             </div>
 
@@ -465,18 +529,18 @@ export const FoodItems: React.FC = () => {
       {/* Dynamic Pagination Architecture Integration */}
       {!isLoading && foodItemsList?.length > 0 && (
         <Pagination
-  currentPage={data?.pagination?.current_page ?? 1}
-  totalPages={data?.pagination?.last_page ?? 1}
-  totalEntries={data?.pagination?.total ?? 0}
-  from={data?.pagination?.from ?? 0}
-  to={data?.pagination?.to ?? 0}
-  entriesPerPage={data?.pagination?.per_page ?? perPage}
-  onPageChange={(pageNumber) => setPage(pageNumber)}
-  onEntriesPerPageChange={(perPageNumber) => {
-    setPerPage(perPageNumber);
-    setPage(1);
-  }}
-/>
+          currentPage={data?.pagination?.current_page ?? 1}
+          totalPages={data?.pagination?.last_page ?? 1}
+          totalEntries={data?.pagination?.total ?? 0}
+          from={data?.pagination?.from ?? 0}
+          to={data?.pagination?.to ?? 0}
+          entriesPerPage={data?.pagination?.per_page ?? perPage}
+          onPageChange={(pageNumber) => setPage(pageNumber)}
+          onEntriesPerPageChange={(perPageNumber) => {
+            setPerPage(perPageNumber);
+            setPage(1);
+          }}
+        />
       )}
 
       <ConfirmDeleteModal

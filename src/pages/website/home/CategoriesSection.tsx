@@ -1,9 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useWebCategories } from '../../../hooks/website/categoryService';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import no_image from "../../../assets/images/empty-image.jpg";
+import { NavLink } from 'react-router-dom';
 
 export const CategoriesSection: React.FC = () => {
-  const { data, isLoading, isError, isPending } = useWebCategories();
+  const { data, isPending } = useWebCategories();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -11,12 +13,10 @@ export const CategoriesSection: React.FC = () => {
 
   const categories = data?.data ?? [];
 
-  // Check scroll position to determine whether to show/hide arrows
   const checkScrollPosition = () => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
       setCanScrollLeft(scrollLeft > 5);
-      // Using a small buffer (5px) to prevent floating point calculation inaccuracies
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
     }
   };
@@ -46,12 +46,12 @@ export const CategoriesSection: React.FC = () => {
     }
   };
 
-  return (
+  return (categories?.length > 0 &&
     <section className="py-15 px-6 bg-gray-100">
       <div className="mx-7">
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-3xl font-black text-gray-950">Shop by Categories</h2>
-          <button className="text-orange-600 font-bold hover:underline">View All</button>
+          <button className="text-orange-600 font-bold hover:underline cursor-pointer">View All</button>
         </div>
 
         {/* Wrapper with hover state */}
@@ -71,43 +71,46 @@ export const CategoriesSection: React.FC = () => {
             <ChevronLeft size={22} />
           </button>
 
-          {/* Carousel Container */}
+          {/* Carousel Container with Inner Centering Wrapper */}
           <div 
             ref={scrollRef}
-            className="flex gap-6 overflow-x-auto pb-4 pt-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth px-2"
+            className="w-full overflow-x-auto pb-4 pt-2 scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth px-2"
           >
-            {isPending ? (
-              // Skeleton Loader Cards
-              [1, 2, 3, 4, 5, 6].map((_, idx) => (
-                <div 
-                  key={idx}
-                  className="flex-shrink-0 w-52 bg-white p-7 rounded-2xl border border-gray-200 text-center animate-pulse"
-                >
-                  <div className="w-24 h-24 mx-auto bg-gray-200 rounded-sm mb-4" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
-                </div>
-              ))
-            ) : (
-              categories.map((cat, idx) => (
-                <div 
-                  key={idx}
-                  className="group flex-shrink-0 w-52 bg-white p-7 rounded-2xl border border-gray-200 hover:border-orange-200 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 cursor-pointer text-center"
-                >
-                  {/* Image Container */}
-                  <div className="w-24 h-24 mx-auto bg-gray-50 rounded-sm flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                    <img 
-                      src={`${import.meta.env.VITE_API_BASE_URL}/storage/${cat?.media?.media_path}`} 
-                      alt={cat?.title} 
-                      className="w-full h-full object-cover"
-                    />
+            <div className="flex items-center gap-6 w-max mx-auto">
+              {isPending ? (
+                // Skeleton Loader Cards
+                [1, 2, 3, 4, 5, 6].map((_, idx) => (
+                  <div 
+                    key={idx}
+                    className="flex-shrink-0 w-52 bg-white p-7 rounded-2xl border border-gray-200 text-center animate-pulse"
+                  >
+                    <div className="w-24 h-24 mx-auto bg-gray-200 rounded-sm mb-4" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
                   </div>
-                  {/* Category Name */}
-                  <h3 className="font-bold text-gray-800 group-hover:text-orange-600 transition-colors truncate text-base">
-                    {cat?.title}
-                  </h3>
-                </div>
-              ))
-            )}
+                ))
+              ) : (
+                categories.map((cat, idx) => (
+                  <NavLink
+                    to={`/food-items/${cat?.category_slug}`}
+                    key={idx}
+                    className="group flex-shrink-0 w-53 bg-white p-5 rounded-2xl border border-gray-200 hover:border-orange-200 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 cursor-pointer text-center"
+                  >
+                    {/* Image Container */}
+                    <div className="w-35 h-35 mx-auto bg-gray-50 rounded-sm flex items-center justify-center text-4xl mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img 
+                        src={cat?.media?.media_path ? `${import.meta.env.VITE_API_BASE_URL}/storage/${cat.media.media_path}` : no_image} 
+                        alt={cat?.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Category Name */}
+                    <h3 className="font-bold text-gray-800 group-hover:text-orange-600 transition-colors truncate text-base">
+                      {cat?.title}
+                    </h3>
+                  </NavLink>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Right Arrow */}

@@ -1,5 +1,6 @@
 import React from 'react';
 import logo from "../../assets/images/logo.png";
+import { NavLink } from 'react-router-dom';
 
 // Reusable SVG wrapper for clean look
 const IconWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -14,9 +15,9 @@ export const Footer: React.FC = () => {
         {/* Brand Section */}
         <div className="space-y-1">
           <div className="flex items-center gap-2 cursor-pointer">
-              <div className="h-40 w-40 overflow-hidden flex items-center justify-center">
+              <NavLink to={'/'} className="h-40 w-40 overflow-hidden flex items-center justify-center">
                 <img src={logo} alt="Foodie Logo" className="w-full h-full object-contain" />
-              </div>
+              </NavLink>
             </div>
           <p className="text-sm leading-relaxed">
             Elevating your dining experience with speed, precision, and passion. Delivered fresh to you.
