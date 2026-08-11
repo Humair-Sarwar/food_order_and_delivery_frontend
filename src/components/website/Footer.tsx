@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from "../../assets/images/logo.png";
 
 // Reusable SVG wrapper for clean look
 const IconWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -11,11 +12,12 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
         
         {/* Brand Section */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-orange-600 rounded-lg" />
-            <span className="text-2xl font-black text-white tracking-tighter">FOODIE</span>
-          </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 cursor-pointer">
+              <div className="h-40 w-40 overflow-hidden flex items-center justify-center">
+                <img src={logo} alt="Foodie Logo" className="w-full h-full object-contain" />
+              </div>
+            </div>
           <p className="text-sm leading-relaxed">
             Elevating your dining experience with speed, precision, and passion. Delivered fresh to you.
           </p>

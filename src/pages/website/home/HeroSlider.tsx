@@ -29,7 +29,7 @@ export const HeroSlider: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative mx-7 h-[600px] overflow-hidden rounded-[3rem] bg-gray-900 shadow-2xl">
+    <div className="relative mx-10 h-[600px] overflow-hidden rounded-[3rem] bg-gray-900 shadow-2xl">
       <AnimatePresence mode="wait">
         <motion.div
           key={index}

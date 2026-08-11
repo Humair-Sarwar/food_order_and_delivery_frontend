@@ -37,7 +37,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               <h2 className="text-2xl font-black text-gray-950">Search</h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 cursor-pointer rounded-full transition-colors"
               >
                 <X size={20} />
               </button>

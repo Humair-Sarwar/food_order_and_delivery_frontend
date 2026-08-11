@@ -10,7 +10,7 @@ const features = [
 
 export const FeaturesSection: React.FC = () => {
   return (
-    <section className="py-24 px-6 bg-[#fafafa]">
+    <section className="py-24 px-6 bg-gray-100">
       <div className="max-w-7xl mx-auto text-center space-y-4 mb-16">
         <h2 className="text-sm font-bold text-orange-600 uppercase tracking-[0.2em]">Our Advantages</h2>
         <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tight">Stunning Features</h1>
