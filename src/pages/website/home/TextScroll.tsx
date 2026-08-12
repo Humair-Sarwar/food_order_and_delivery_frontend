@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 export const TextScroll: React.FC = () => {
   return (
-    <div className="w-full overflow-hidden py-10 bg-white">
+    <div className="w-full overflow-hidden py-8 sm:py-10 bg-white">
       <motion.div
         className="flex whitespace-nowrap"
         initial={{ x: 0 }}
@@ -18,10 +18,9 @@ export const TextScroll: React.FC = () => {
         {[...Array(2)].map((_, i) => (
           <span
             key={i}
-            className="inline-block px-10 shrink-0" // shrink-0 add kiya taaki text dabey nahi
+            className="inline-block px-6 sm:px-10 shrink-0 text-4xl sm:text-5xl md:text-[60px]" // shrink-0 add kiya taaki text dabey nahi
             style={{
               fontWeight: 700,
-              fontSize: "60px",
               fontFamily: "'Roboto', sans-serif",
               background: "linear-gradient(90deg, #4a4a4a 0%, #f97316 40%, #f97316 100%)",
               WebkitBackgroundClip: "text",

@@ -15,10 +15,10 @@ export const Footer: React.FC = () => {
         {/* Brand Section */}
         <div className="space-y-1">
           <div className="flex items-center gap-2 cursor-pointer">
-              <NavLink to={'/'} className="h-40 w-40 overflow-hidden flex items-center justify-center">
-                <img src={logo} alt="Foodie Logo" className="w-full h-full object-contain" />
-              </NavLink>
-            </div>
+  <NavLink to={'/'} className="w-32 h-12 sm:w-40 sm:h-14 overflow-hidden flex items-center justify-center -ml-2 sm:-ml-3">
+    <img src={logo} alt="Foodie Logo" className="w-full h-full object-contain" />
+  </NavLink>
+</div>
           <p className="text-sm leading-relaxed">
             Elevating your dining experience with speed, precision, and passion. Delivered fresh to you.
           </p>
@@ -58,7 +58,7 @@ export const Footer: React.FC = () => {
               placeholder="Enter your email" 
               className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-orange-500 transition-all"
             />
-            <button className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-orange-600/20">
+            <button className="bg-orange-600 cursor-pointer hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-orange-600/20">
               SUBSCRIBE
             </button>
           </div>
