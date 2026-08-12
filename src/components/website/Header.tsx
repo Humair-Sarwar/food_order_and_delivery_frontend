@@ -35,12 +35,12 @@ export const Header: React.FC = () => {
                 <Utensils size={12} className="text-orange-500" /> Food Items
               </NavLink>
               <span className="text-gray-600">|</span>
-              <a 
-                href="/restaurants"
+              <NavLink
+                to="/restaurants"
                 className="flex items-center gap-1.5 hover:text-orange-500 transition-colors"
               >
                 <Store size={12} className="text-orange-500" /> Restaurants
-              </a>
+              </NavLink>
             </div>
           </div>
         </div>

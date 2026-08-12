@@ -67,10 +67,11 @@ export const Categories: React.FC = () => {
       )}
       
       <section className="pt-15 px-6 bg-gray-100">
-        <div className="pb-6 px-6 text-center">
+        {(data?.selected_category?.page_description || data?.selected_category?.title) && <div className="pb-6 px-6 text-center">
           <h1 className="text-3xl font-black text-gray-950 mb-2">{data?.selected_category?.title}</h1>
           {data?.selected_category?.page_description && <p className="text-gray-600 mx-auto">{data?.selected_category?.page_description}</p>}
-        </div>
+        </div>}
+        
         <div className="mx-7">
           {/* Wrapper with hover state */}
           <div

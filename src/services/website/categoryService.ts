@@ -24,3 +24,12 @@ export const WebListingCategories = (
     slug ? { url: slug } : {}
   );
 };
+
+
+export const WebFilterCategories = (): Promise<
+  ApiResponse<Category[]>
+> => {
+  return get<ApiResponse<Category[]>>(
+    "/api/web/categories/filter"
+  );
+};

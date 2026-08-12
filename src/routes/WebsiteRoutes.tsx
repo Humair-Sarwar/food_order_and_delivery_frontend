@@ -5,6 +5,7 @@ import { ProductDetail } from "../pages/website/product-detail-page/ProductDetai
 import { CartPage } from "../pages/website/CartPage";
 import { CheckoutPage } from "../pages/website/CheckoutPage";
 import { ProductListingPage } from "../pages/website/product-listing-page/ProductListingPage";
+import Restaurants from "../pages/website/product-listing-page/Restaurants";
 
 
 const WebsiteRoutes = () => {
@@ -21,6 +22,8 @@ const WebsiteRoutes = () => {
       <Route path="/food-items/All" element={<ProductListingPage />} />
 
       <Route path="/food-items/:slug" element={<ProductListingPage />} />
+
+      <Route path="/restaurants" element={<Restaurants />} />
     </Route>
     </>
   );
