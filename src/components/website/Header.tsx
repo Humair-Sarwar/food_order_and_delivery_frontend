@@ -1,14 +1,63 @@
-import React, { useState } from "react";
-import { User, Search, MapPin, Phone, ShoppingBag, Utensils, Store } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { User, Search, MapPin, Phone, ShoppingBag, Utensils, Store, LayoutDashboard, FileText, Heart, UserCog, LogOut, ChevronDown } from "lucide-react";
 import { CartModal } from "./CartModal";
 import { SearchModal } from "./SearchModal";
 import logo from "../../assets/images/logo.png";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useAppSelector, useAppDispatch } from "../../hooks/redux";
+import { logout } from "../../store/slices/authSlice";
 
 export const Header: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  // Retrieve token and role from Redux state
+  const { token, role } = useAppSelector((state) => state.auth);
+
+  // Close dropdown when clicking outside (primarily for mobile or outside clicks)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Desktop hover handlers
+  const handleMouseEnter = () => {
+    if (window.innerWidth >= 768) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setIsDropdownOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (window.innerWidth >= 768) {
+      timeoutRef.current = setTimeout(() => {
+        setIsDropdownOpen(false);
+      }, 150);
+    }
+  };
+
+  // Toggle dropdown on click (works on mobile/tablet, or as a click toggle on desktop if preferred)
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen((prev) => !prev);
+  };
+
+  // Handle user logout action
+  const handleLogout = () => {
+    dispatch(logout());
+    setIsDropdownOpen(false);
+    navigate("/login");
+  };
 
   return (
     <>
@@ -79,7 +128,7 @@ export const Header: React.FC = () => {
               })}
             </nav>
 
-            {/* Right Side: Search, Cart & Login */}
+            {/* Right Side: Search, Cart & Authentication Section */}
             <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => setIsSearchOpen(true)}
@@ -98,13 +147,98 @@ export const Header: React.FC = () => {
                 <ShoppingBag size={18} />
               </button>
 
-              <button 
-                onClick={() => navigate('/login')} 
-                className="flex items-center gap-2 px-3 sm:px-6 cursor-pointer py-2 sm:py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-orange-600/20 active:scale-95"
-              >
-                <User size={14} />
-                <span className="hidden sm:inline">Login</span>
-              </button>
+              {/* Conditional Rendering based on Authentication Token and Role */}
+              {!token ? (
+                // Show Login Button if token does not exist
+                <button 
+                  onClick={() => navigate('/login')} 
+                  className="flex items-center gap-2 px-3 sm:px-6 cursor-pointer py-2 sm:py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-orange-600/20 active:scale-95"
+                >
+                  <User size={14} />
+                  <span className="hidden sm:inline">Login</span>
+                </button>
+              ) : (
+                // Show Dropdown Menu: Hover on Desktop, Click on Mobile/Tablet
+                <div 
+                  className="relative" 
+                  ref={dropdownRef}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <button
+                    onClick={handleDropdownToggle}
+                    className="flex items-center gap-2 px-3 sm:px-4 cursor-pointer py-2 sm:py-2.5 bg-gray-950 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
+                  >
+                    <User size={14} />
+                    <span className="hidden sm:inline">
+                      {role === "admin" ? "Admin" : "Account"}
+                    </span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {/* Dropdown Options List */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 pt-2 w-56 z-50">
+                      <div className="bg-white border border-gray-100 rounded-2xl shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {role === "user" && (
+                          <>
+                            <button
+                              onClick={() => { setIsDropdownOpen(false); navigate("/user/dashboard"); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                            >
+                              <LayoutDashboard size={16} /> Dashboard
+                            </button>
+                            <button
+                              onClick={() => { setIsDropdownOpen(false); navigate("/user/orders"); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                            >
+                              <FileText size={16} /> Food Item Orders
+                            </button>
+                            <button
+                              onClick={() => { setIsDropdownOpen(false); navigate("/user/wishlist"); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                            >
+                              <Heart size={16} /> Wishlist
+                            </button>
+                            <button
+                              onClick={() => { setIsDropdownOpen(false); navigate("/user/profile-info"); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                            >
+                              <UserCog size={16} /> Profile Info
+                            </button>
+                            <div className="my-1 border-t border-gray-100" />
+                          </>
+                        )}
+
+                        {role === "admin" && (
+                          <>
+                            <button
+                              onClick={() => { setIsDropdownOpen(false); navigate("/admin/dashboard"); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                            >
+                              <LayoutDashboard size={16} /> Dashboard
+                            </button>
+                            <button
+                              onClick={() => { setIsDropdownOpen(false); navigate("/admin/orders"); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left cursor-pointer"
+                            >
+                              <FileText size={16} /> Orders
+                            </button>
+                            <div className="my-1 border-t border-gray-100" />
+                          </>
+                        )}
+
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer"
+                        >
+                          <LogOut size={16} /> Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -117,3 +251,5 @@ export const Header: React.FC = () => {
     </>
   );
 };
+
+export default Header;
