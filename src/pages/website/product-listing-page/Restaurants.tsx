@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Phone, Mail, Building2, ChevronRight, Ban } from "lucide-react";
+import { Search, MapPin, Phone, Mail, Building2, ChevronRight, Ban, Store } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import no_image from "../../../assets/images/empty-image.jpg";
 import { useAllRestaurantsListing } from "../../../hooks/website/useRestaurants";
@@ -95,15 +95,17 @@ export const Restaurants: React.FC = () => {
 
   return (
     <div className="w-full bg-gray-100 min-h-screen">
-      <div className="mx-8 px-4 py-12 rounded-[3rem]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Top Header: Title on Left, Search Filter on Right */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
-          <h1 className="text-4xl font-black text-gray-950">Explore Restaurants</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-10 gap-4">
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-950 tracking-tight">
+            Explore Restaurants
+          </h1>
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                 size={18}
               />
               <input
@@ -111,7 +113,7 @@ export const Restaurants: React.FC = () => {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Search restaurant, city, email..."
-                className="pl-10 pr-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-orange-500 outline-none w-72 md:w-80 bg-white shadow-sm text-sm"
+                className="pl-10 pr-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-orange-500 outline-none w-full sm:w-80 bg-white shadow-sm text-sm"
               />
             </div>
           </div>
@@ -129,8 +131,14 @@ export const Restaurants: React.FC = () => {
               ))}
             </div>
           ) : currentRestaurants.length === 0 ? (
-            <div className="bg-white p-12 rounded-[2.5rem] border border-gray-100 text-center shadow-sm">
-              <p className="text-lg font-bold text-gray-500">No restaurants found.</p>
+            <div className="bg-white p-8 sm:p-12 rounded-[2.5rem] border border-gray-100 text-center flex flex-col items-center justify-center gap-4 shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                    <Store size={28} />
+                </div>
+                <div>
+                    <h3 className="text-lg font-black text-gray-950 mb-1">No restaurants found</h3>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-400">Try searching for a different name, city, or email.</p>
+                </div>
             </div>
           ) : (
             <>
@@ -142,9 +150,9 @@ export const Restaurants: React.FC = () => {
                     <div
                       key={restaurant?.id || i}
                       onClick={() => handleViewMenu(restaurant?.id)}
-                      className="group bg-white p-5 rounded-[2.5rem] border border-orange-300 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 relative flex flex-col justify-between cursor-pointer"
+                      className="group bg-white p-5 rounded-[2.5rem] border border-orange-200 hover:border-orange-400 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 relative flex flex-col justify-between cursor-pointer"
                     >
-                      <div>
+                      <div className="min-w-0">
                         {/* Cover Banner & Floating Logo Layout */}
                         <div className="relative mb-8">
                           {/* Banner Image */}
@@ -169,7 +177,7 @@ export const Restaurants: React.FC = () => {
                           )}
 
                           {/* Floating Logo Overlay */}
-                          <div className="absolute -bottom-6 left-6 w-14 h-14 rounded-2xl bg-white p-1 border-2 border-white shadow-md overflow-hidden z-10">
+                          <div className="absolute -bottom-6 left-6 w-14 h-14 rounded-2xl bg-white p-1 border-2 border-white shadow-md overflow-hidden z-10 flex-shrink-0">
                             <img
                               src={
                                 restaurant?.logo?.media_path
@@ -183,7 +191,7 @@ export const Restaurants: React.FC = () => {
                         </div>
 
                         {/* Restaurant Name */}
-                        <h3 className="font-black text-xl mb-2 text-gray-950 truncate">
+                        <h3 className="font-black text-xl mb-2 text-gray-950 truncate block w-full">
                           {restaurant?.name}
                         </h3>
 
@@ -196,41 +204,35 @@ export const Restaurants: React.FC = () => {
                         
                         {/* City */}
                         {restaurant?.city && restaurant?.city !== "NULL" && (
-                          <p className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 truncate">
+                          <div className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 min-w-0">
                             <Building2 size={14} className="text-orange-600 flex-shrink-0" />
                             <span className="truncate">{restaurant.city}</span>
-                          </p>
+                          </div>
                         )}
 
                         {/* Address */}
                         {restaurant?.address && restaurant?.address !== "NULL" && (
-                          <p className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 truncate">
+                          <div className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 min-w-0">
                             <MapPin size={14} className="text-orange-600 flex-shrink-0" />
                             <span className="truncate">{restaurant.address}</span>
-                          </p>
+                          </div>
                         )}
 
                         {/* Phone */}
                         {restaurant?.phone && restaurant?.phone !== "NULL" && (
-                          <p className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 truncate">
+                          <div className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 min-w-0">
                             <Phone size={14} className="text-orange-600 flex-shrink-0" />
                             <span className="truncate">{restaurant.phone}</span>
-                          </p>
+                          </div>
                         )}
 
                         {/* Email */}
                         {restaurant?.email && restaurant?.email !== "NULL" && (
-                          <p className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 truncate">
+                          <div className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2 min-w-0">
                             <Mail size={14} className="text-orange-600 flex-shrink-0" />
                             <span className="truncate">{restaurant.email}</span>
-                          </p>
+                          </div>
                         )}
-
-                        {/* Delivery & Min Order Details */}
-                        {/* <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 text-xs font-bold text-gray-600">
-                          <span>Fee: Rs. {Number(restaurant?.delivery_fee || 0)}</span>
-                          <span>Min: Rs. {Number(restaurant?.minimum_order_amount || 0)}</span>
-                        </div> */}
                       </div>
 
                       {/* Action / Footer */}
@@ -238,7 +240,7 @@ export const Restaurants: React.FC = () => {
                         <span className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-xl">
                           View Menu
                         </span>
-                        <div className="w-9 h-9 rounded-full bg-gray-950 text-white flex items-center justify-center group-hover:bg-orange-600 transition-colors">
+                        <div className="w-9 h-9 rounded-full bg-gray-950 text-white flex items-center justify-center group-hover:bg-orange-600 transition-colors flex-shrink-0">
                           <ChevronRight size={18} />
                         </div>
                       </div>
