@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Store,
   Tag,
+  Heart,
 } from "lucide-react";
 import { RelatedProducts } from "./RelatedProducts";
 import { useFoodItemDetail } from "../../../hooks/website/useFoodItems";
@@ -19,6 +20,7 @@ import no_image from "../../../assets/images/empty-image.jpg";
 export const ProductDetail: React.FC = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false); // Wishlist state added
   const { data, isPending } = useFoodItemDetail({
     id: id,
   });
@@ -166,18 +168,33 @@ export const ProductDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4">
-              {!isAvailable ? (
-                <div className="flex items-center gap-2 text-red-600 text-sm font-semibold">
-                  <XCircle size={18} strokeWidth={2.5} />
-                  Out of Stock
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
-                  <CheckCircle2 size={18} strokeWidth={2.5} />
-                  In Stock
-                </div>
-              )}
+            {/* Stock status and Wishlist Button Section */}
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                {!isAvailable ? (
+                  <div className="flex items-center gap-2 text-red-600 text-sm font-semibold">
+                    <XCircle size={18} strokeWidth={2.5} />
+                    Out of Stock
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
+                    <CheckCircle2 size={18} strokeWidth={2.5} />
+                    In Stock
+                  </div>
+                )}
+              </div>
+
+              {/* Wishlist Button */}
+              <button
+                onClick={() => setIsWishlisted(!isWishlisted)}
+                className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-orange-600 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 px-4 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                <Heart
+                  size={18}
+                  className={isWishlisted ? "text-red-500 fill-red-500" : "text-gray-500"}
+                />
+                <span>{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
+              </button>
             </div>
 
             {/* Controls */}
