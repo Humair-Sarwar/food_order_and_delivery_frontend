@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShoppingBag,
   Star,
@@ -14,18 +14,72 @@ import {
 } from "lucide-react";
 import { RelatedProducts } from "./RelatedProducts";
 import { useFoodItemDetail } from "../../../hooks/website/useFoodItems";
+import { useAddToWishlist, useRemoveFromWishlist } from "../../../hooks/website/useWishlist";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import no_image from "../../../assets/images/empty-image.jpg";
 
 export const ProductDetail: React.FC = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false); // Wishlist state added
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // Check if user is logged in (adjust token key based on your project configuration)
+  const isLoggedIn = Boolean(localStorage.getItem("token")); 
+  // Alternatively, if you have an auth context/hook, use that:
+  // const { isAuthenticated: isLoggedIn } = useAuth();
+
   const { data, isPending } = useFoodItemDetail({
     id: id,
   });
 
+  const { mutate: addToWishlist, isPending: isAddingWishlist } = useAddToWishlist();
+  const { mutate: removeFromWishlist, isPending: isRemovingWishlist } = useRemoveFromWishlist();
+
   const foodItem = data?.data;
+  const apiWishlistStatus = (data?.data as any)?.is_wishlisted;
+
+  // Sync wishlist status from API response when data is loaded
+  useEffect(() => {
+    if (typeof apiWishlistStatus === "boolean") {
+      setIsWishlisted(apiWishlistStatus);
+    }
+  }, [apiWishlistStatus]);
+
+  // Handle Wishlist Toggle
+  const handleWishlistToggle = () => {
+    if (!id || isAddingWishlist || isRemovingWishlist) return;
+
+    if (isWishlisted) {
+      // Remove from wishlist
+      removeFromWishlist(
+        { food_item_id: id },
+        {
+          onSuccess: (res: any) => {
+            setIsWishlisted(false);
+            toast.success(res?.message || "Removed from wishlist!");
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to remove item.");
+          },
+        }
+      );
+    } else {
+      // Add to wishlist
+      addToWishlist(
+        { food_item_id: id },
+        {
+          onSuccess: (res: any) => {
+            setIsWishlisted(true);
+            toast.success(res?.message || "Added to wishlist!");
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to add item.");
+          },
+        }
+      );
+    }
+  };
 
   // Discount & Price validation logic
   const isOnSale = foodItem?.is_on_sale === 1;
@@ -184,17 +238,20 @@ export const ProductDetail: React.FC = () => {
                 )}
               </div>
 
-              {/* Wishlist Button */}
-              <button
-                onClick={() => setIsWishlisted(!isWishlisted)}
-                className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-orange-600 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 px-4 py-2 rounded-xl transition-all cursor-pointer"
-              >
-                <Heart
-                  size={18}
-                  className={isWishlisted ? "text-red-500 fill-red-500" : "text-gray-500"}
-                />
-                <span>{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
-              </button>
+              {/* Wishlist Button - Rendered only if user is logged in */}
+              {isLoggedIn && (
+                <button
+                  onClick={handleWishlistToggle}
+                  disabled={isAddingWishlist || isRemovingWishlist}
+                  className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-orange-600 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 px-4 py-2 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Heart
+                    size={18}
+                    className={isWishlisted ? "text-red-500 fill-red-500" : "text-gray-500"}
+                  />
+                  <span>{isWishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
+                </button>
+              )}
             </div>
 
             {/* Controls */}
@@ -308,3 +365,5 @@ export const ProductDetail: React.FC = () => {
     </>
   );
 };
+
+export default ProductDetail;
