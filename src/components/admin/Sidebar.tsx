@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   UtensilsCrossed, 
@@ -16,6 +16,10 @@ import {
   Utensils
 } from 'lucide-react';
 import logo from "../../assets/images/logo.png";
+import { useAppDispatch } from "../../hooks/redux"; 
+import { logout as logoutAction } from "../../store/slices/authSlice";
+import { toast } from "react-toastify"; 
+import { useLogout } from '../../hooks/auth/useLogin';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -24,10 +28,34 @@ interface SidebarProps {
   setIsMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { mutate: mutateLogout, isPending: isLoggingOut } = useLogout();
+
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ top: number } | null>(null);
+
+  // Logout Handler Function
+  const handleLogout = () => {
+    mutateLogout(undefined, {
+      onSuccess: () => {
+        dispatch(logoutAction());
+        localStorage.removeItem("cart_id");
+        setIsMobileOpen(false);
+        toast.success("Admin session terminated successfully");
+        navigate("/login", { replace: true });
+      },
+      onError: () => {
+        // Fallback even if API throws an error
+        dispatch(logoutAction());
+        localStorage.removeItem("cart_id");
+        setIsMobileOpen(false);
+        navigate("/login", { replace: true });
+      },
+    });
+  };
 
   const menuSections = [
     {
@@ -68,7 +96,6 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
               src={logo} 
               alt="StackFood Branding Logo" 
               className="w-40 h-auto object-contain transition-transform duration-300" 
-              
             />
           </div>
         )}
@@ -83,12 +110,10 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
       </div>
 
       {/* Primary Navigation Categorized Links Scroll Container */}
-      {/* Dynamic space-y: Changes from space-y-6 to space-y-2 on collapse */}
       <nav className={`flex-1 px-3 py-6 overflow-y-auto custom-scrollbar transition-all duration-300 ${
         isCollapsed ? 'space-y-2' : 'space-y-6'
       }`}>
         {menuSections.map((section, idx) => (
-          /* Dynamic space-y for internal links within sections */
           <div key={idx} className={`transition-all duration-300 ${isCollapsed ? 'space-y-1' : 'space-y-1'}`}>
             {!isCollapsed && (
               <p className="px-4 text-[10px] font-bold tracking-widest text-gray-600 uppercase select-none mb-2">
@@ -118,7 +143,6 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
                       setHoveredItem(null);
                       setTooltipPosition(null);
                     }}
-                    /* Dynamic vertical padding based on state */
                     className={`flex items-center justify-between px-3.5 text-xs font-bold rounded-xl relative transition-all duration-300 group ${
                       isActive
                         ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-600/30 font-extrabold translate-x-0.5'
@@ -192,14 +216,15 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
         </div>
 
         <button
-          onClick={() => console.log("Admin requesting application logout session termination.")}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
           title={isCollapsed ? "Logout Session" : ""}
-          className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-gray-500 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all duration-200 cursor-pointer group w-full ${
+          className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-gray-500 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all duration-200 cursor-pointer group w-full disabled:opacity-50 ${
             isCollapsed ? 'justify-center' : ''
           }`}
         >
           <LogOut className="w-4.5 h-4.5 text-gray-600 group-hover:text-red-400 group-hover:-translate-x-0.5 transition-transform duration-200 shrink-0" />
-          {!isCollapsed && <span className="tracking-wide">Logout Session</span>}
+          {!isCollapsed && <span className="tracking-wide">{isLoggingOut ? "Terminating..." : "Logout Session"}</span>}
         </button>
       </div>
     </>
@@ -229,6 +254,6 @@ const Sidebar:React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobileO
       </aside>
     </>
   );
-}
+};
 
 export default Sidebar;

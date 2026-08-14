@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Menu, 
   Bell, 
@@ -12,6 +13,10 @@ import {
   Clock,
   Globe
 } from 'lucide-react';
+import { useAppDispatch } from "../../hooks/redux"; 
+import { logout as logoutAction } from "../../store/slices/authSlice";
+import { toast } from "react-toastify";
+import { useLogout } from '../../hooks/auth/useLogin';
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -20,11 +25,35 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ isCollapsed, setIsCollapsed, setIsMobileOpen }) => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { mutate: mutateLogout, isPending: isLoggingOut } = useLogout();
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
+
+  // Logout Handler Function
+  const handleLogout = () => {
+    mutateLogout(undefined, {
+      onSuccess: () => {
+        dispatch(logoutAction());
+        localStorage.removeItem("cart_id");
+        setShowProfileMenu(false);
+        toast.success("Admin session terminated successfully");
+        navigate("/login", { replace: true });
+      },
+      onError: () => {
+        // Fallback even if API throws an error
+        dispatch(logoutAction());
+        localStorage.removeItem("cart_id");
+        setShowProfileMenu(false);
+        navigate("/login", { replace: true });
+      },
+    });
+  };
 
   const dummyNotifications = [
     {
@@ -210,9 +239,13 @@ const Header: React.FC<HeaderProps> = ({ isCollapsed, setIsCollapsed, setIsMobil
               
               <div className="h-px bg-gray-50 my-1" />
               
-              <button className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer">
+              <button 
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              >
                 <LogOut className="w-4 h-4 text-red-400" />
-                Logout Session
+                {isLoggingOut ? "Terminating..." : "Logout Session"}
               </button>
             </div>
           )}

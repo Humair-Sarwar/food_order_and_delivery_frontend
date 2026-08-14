@@ -6,7 +6,7 @@ export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-24 right-6 z-[999] flex flex-col items-end">
+    <div className="fixed bottom-24 right-6 z-[55]! flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div

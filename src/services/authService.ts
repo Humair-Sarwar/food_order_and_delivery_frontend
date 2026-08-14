@@ -13,3 +13,7 @@ export const loginUser = async (
 ): Promise<ApiResponse> => {
   return post<ApiResponse>("/api/auth/login", data);
 };
+
+export const Logout = (): Promise<ApiResponse<null>> => {
+  return post<ApiResponse<null>>("/api/auth/logout", {});
+};

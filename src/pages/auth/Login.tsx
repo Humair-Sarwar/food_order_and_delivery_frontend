@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/images/logo.png";
 import banner_login from "../../assets/images/login-cover.jpg";
 import { useLogin } from "../../hooks/auth/useLogin";
@@ -11,9 +11,11 @@ import { setAuth } from "../../store/slices/authSlice";
 interface FormData {
   email: string;
   password: string;
+  cart_id?: string | null;
 }
 
 const Login: React.FC = () => {
+  const cartId = localStorage.getItem("cart_id");
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { mutate, isPending } = useLogin();
@@ -55,34 +57,48 @@ const Login: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
 
-    // Fire validation before submitting user login state data
     if (validateForm()) {
-      mutate(formData, {
-        onSuccess: (res: any) => {
-          dispatch(
-            setAuth({
-              token: res.token,
-              role: res.user.role,
-              user: res.user,
-            }),
-          );
-          toast.success(res?.message || "Success");
-          setFormData({
-            email: "",
-            password: "",
-          });
-          navigate("/admin/dashboard");
+      
+      mutate(
+        {
+          ...formData,
+          cart_id: cartId,
         },
-        onError: (err: any) => {
-          const response = err?.response?.data;
-          toast.error(
-            response?.errors?.[0] ||
-              response?.message ||
-              "Something went wrong!",
-          );
-        },
-      });
+        {
+          onSuccess: (res: any) => {
+            console.log("Login success response:", res);
+            dispatch(
+              setAuth({
+                token: res.token,
+                role: res.user.role,
+                user: res.user,
+              })
+            );
+            
+            if (res.cart_id) {
+              localStorage.setItem("cart_id", res.cart_id);
+            }
+
+            toast.success(res?.message || "Success");
+
+            // Navigate without full reload
+            const targetPath = res.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard";
+            navigate(targetPath, { replace: true });
+          },
+          onError: (err: any) => {
+            console.log("Login error:", err);
+            const response = err?.response?.data;
+            toast.error(
+              response?.errors?.[0] ||
+                response?.message ||
+                "Something went wrong!"
+            );
+          },
+        }
+      );
     }
   };
 
@@ -117,13 +133,13 @@ const Login: React.FC = () => {
         <div className="mx-auto w-full max-w-md">
           {/* Logo & Header Section */}
           <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <NavLink to={'/'} className="flex items-center justify-center gap-2 mb-4">
               <img
                 src={logo}
                 alt="StackFood Logo"
                 className="w-40 sm:w-40 md:w-50 h-auto object-contain transition-all duration-300"
               />
-            </div>
+            </NavLink>
             <h2 className="text-xl font-bold text-gray-700 tracking-tight">
               Sign In To Your Account
             </h2>

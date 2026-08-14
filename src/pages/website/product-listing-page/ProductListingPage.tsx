@@ -6,6 +6,7 @@ import {
   ChevronUp,
   UtensilsCrossed,
   X,
+  ShoppingBag,
 } from "lucide-react";
 import { Categories } from "./Categories";
 import { useWebFoodItems } from "../../../hooks/website/useFoodItems";
@@ -15,6 +16,10 @@ import Pagination from "../../../components/common/Pagination";
 import { useWebRestaurants } from "../../../hooks/website/useRestaurants";
 import { useWebFilterCategories } from "../../../hooks/website/categoryService";
 import type { WebFoodItemsResponse } from "../../../services/website/foodItemService";
+import { useAddToCart } from "../../../hooks/website/useCart";
+import { toast } from "react-toastify";
+import { CartModal } from "../../../components/website/CartModal";
+import { AddToCartToast } from "../../../components/common/AddToCartToast";
 
 // Helper function to format strings for URL slugs (slugify)
 const slugify = (text: string) => {
@@ -22,9 +27,9 @@ const slugify = (text: string) => {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, "-") // Replace spaces with -
-    .replace(/[^\w-]+/g, "") // Remove all non-word chars
-    .replace(/--+/g, "-"); // Replace multiple - with single -
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "")
+    .replace(/--+/g, "-");
 };
 
 // Reusable Accordion Component for Filters
@@ -48,9 +53,55 @@ const FilterSection = ({ title, isOpen, onToggle, children }: any) => (
 export const ProductListingPage: React.FC = () => {
   const [openSection, setOpenSection] = useState<string | null>("price");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  
+  // States for Add to Cart Toast & Cart Side Drawer
+  const [isCartToastOpen, setIsCartToastOpen] = useState(false);
+  const [isCartSideModalOpen, setIsCartSideModalOpen] = useState(false);
+  const [recentlyAddedItem, setRecentlyAddedItem] = useState<any>(null);
+
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   
+  const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
+
+  // Handler for adding a specific product to the cart
+  const handleAddToCart = (item: any, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents triggering card navigation click
+    const cartId = localStorage.getItem("cart_id");
+
+    addToCart(
+      {
+        food_item_id: item.id,
+        quantity: 1,
+        ...(cartId && { cart_id: cartId }),
+      },
+      {
+        onSuccess: (res: any) => {
+          const newCartId = res?.data?.cart_id || res?.cart_id;
+          if (newCartId) {
+            localStorage.setItem("cart_id", newCartId);
+          }
+
+          // Save added item details for the toast preview
+          setRecentlyAddedItem({
+            title: item?.title,
+            image: item?.image?.media_path,
+            restaurantName: item?.restaurant?.name,
+            price: item?.sale_price || item?.regular_price,
+          });
+          
+          // Open the Toast Modal
+          setIsCartToastOpen(true);
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to add product to cart"
+          );
+        },
+      }
+    );
+  };
+
   // Read query parameters from the URL
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -65,23 +116,19 @@ export const ProductListingPage: React.FC = () => {
   const restaurantParam = searchParams.get("restaurant") || "";
   const categoryParam = searchParams.get("category") || "";
 
-  // Parse selected restaurant and category IDs from comma-separated URL strings
   const selectedRestaurants = restaurantParam ? restaurantParam.split(",") : [];
   const selectedCategories = categoryParam ? categoryParam.split(",") : [];
 
-  // Local state for smooth user input typing without triggering instant re-renders
   const [searchQuery, setSearchQuery] = useState(searchQueryParam);
   const [minPrice, setMinPrice] = useState(minPriceParam);
   const [maxPrice, setMaxPrice] = useState(maxPriceParam);
 
-  // Fetch dynamic restaurant and category lists
   const { data: restaurantListing } = useWebRestaurants();
   const restaurantsList = restaurantListing?.data ?? [];
 
   const { data: categoriesFilter } = useWebFilterCategories();
   const categoriesFilterData = categoriesFilter?.data ?? [];
 
-  // Pass parameters to the API hook including multi-restaurant and multi-category filters
   const { data, isPending } = useWebFoodItems({
     url: slug,
     page: currentPage,
@@ -103,19 +150,16 @@ export const ProductListingPage: React.FC = () => {
   const from = responseData?.pagination?.from ?? 0;
   const to = responseData?.pagination?.to ?? 0;
 
-  // Calculate dynamic slider maximum limit ensuring it accommodates manual high inputs and dataset prices
   const calculatedMaxPrice = (Array.isArray(foodItems) ? foodItems : []).reduce((max: number, item: any) => {
-  const p = Number(item?.regular_price) || 0;
-  return p > max ? p : max;
-}, 10000);
+    const p = Number(item?.regular_price) || 0;
+    return p > max ? p : max;
+  }, 10000);
 
   const SLIDER_MIN = 0;
-  // Dynamically scale SLIDER_MAX if the user inputs a max price greater than current max
   const parsedMaxPrice = Number(maxPrice) || 0;
   const SLIDER_MAX = Math.max(calculatedMaxPrice, parsedMaxPrice, 10000);
   const SLIDER_STEP = SLIDER_MAX > 20000 ? 500 : 100;
 
-  // Sync local states if the URL parameters change externally
   useEffect(() => {
     setSearchQuery(searchQueryParam);
   }, [searchQueryParam]);
@@ -128,7 +172,6 @@ export const ProductListingPage: React.FC = () => {
     setMaxPrice(maxPriceParam);
   }, [maxPriceParam]);
 
-  // Prevent body scroll when filter modal is open on mobile
   useEffect(() => {
     if (isFilterModalOpen) {
       document.body.style.overflow = "hidden";
@@ -140,7 +183,6 @@ export const ProductListingPage: React.FC = () => {
     };
   }, [isFilterModalOpen]);
 
-  // Helper function to update search params while strictly preserving the "url" parameter (if used elsewhere)
   const updateUrlParams = (updater: (params: URLSearchParams) => void) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
@@ -156,7 +198,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle typing inside the search box
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -171,7 +212,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle Min Price input/slider change
   const handleMinPriceChange = (value: string) => {
     setMinPrice(value);
 
@@ -185,7 +225,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle Max Price input/slider change
   const handleMaxPriceChange = (value: string) => {
     setMaxPrice(value);
 
@@ -199,7 +238,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle individual restaurant checkbox selection for multi-filtering via URL
   const handleRestaurantToggle = (restaurantId: string) => {
     let updatedRestaurants = [...selectedRestaurants];
 
@@ -219,7 +257,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle individual category checkbox selection for multi-filtering via URL
   const handleCategoryToggle = (categoryId: string) => {
     let updatedCategories = [...selectedCategories];
 
@@ -239,7 +276,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle "In stock only" toggle change and sync with URL search params
   const handleInStockToggle = () => {
     const nextValue = !isAvailableParam;
     updateUrlParams((newParams) => {
@@ -252,7 +288,6 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Handle "On Sale" checkbox change and sync with URL search params
   const handleOnSaleToggle = () => {
     const nextValue = !isOnSaleParam;
     updateUrlParams((newParams) => {
@@ -279,14 +314,12 @@ export const ProductListingPage: React.FC = () => {
     });
   };
 
-  // Reusable Filter Content Component to share between desktop sidebar and mobile modal
   const FilterContent = () => (
     <>
       <div className="flex items-center gap-2 font-black text-xl mb-6">
         <SlidersHorizontal size={20} className="text-orange-600" /> Filters
       </div>
 
-      {/* Stock Toggle */}
       <div className="flex items-center justify-between mb-6">
         <span className="font-bold text-gray-700">In stock only</span>
         <button
@@ -297,7 +330,6 @@ export const ProductListingPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Price Range Accordion */}
       <FilterSection
         title="Price Range"
         isOpen={openSection === "price"}
@@ -322,10 +354,8 @@ export const ProductListingPage: React.FC = () => {
           />
         </div>
         
-        {/* Dual Range Sliders with strict bounds containment */}
         <div className="space-y-3 pt-4 pb-2 overflow-hidden">
           <div className="relative h-2 bg-gray-200 rounded-full">
-            {/* Visual range highlight bar with safe percentage clamp */}
             <div
               className="absolute h-full bg-orange-600 rounded-full"
               style={{
@@ -336,7 +366,6 @@ export const ProductListingPage: React.FC = () => {
           </div>
 
           <div className="relative flex items-center h-0">
-            {/* Minimum Slider Thumb */}
             <input
               type="range"
               min={SLIDER_MIN}
@@ -349,7 +378,6 @@ export const ProductListingPage: React.FC = () => {
               }}
               className="absolute w-full appearance-none bg-transparent pointer-events-none accent-orange-600 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-600"
             />
-            {/* Maximum Slider Thumb */}
             <input
               type="range"
               min={SLIDER_MIN}
@@ -371,7 +399,6 @@ export const ProductListingPage: React.FC = () => {
         </div>
       </FilterSection>
 
-      {/* Restaurants Accordion with Dynamic List and ID selection */}
       {restaurantsList?.length > 0 && 
       <FilterSection
         title="Restaurants"
@@ -402,7 +429,6 @@ export const ProductListingPage: React.FC = () => {
       </FilterSection>
       }
 
-      {/* Categories Accordion with Dynamic List and ID selection */}
       {categoriesFilterData?.length > 0 && 
       <FilterSection
         title="Categories"
@@ -433,7 +459,6 @@ export const ProductListingPage: React.FC = () => {
       </FilterSection>
       }
 
-      {/* Other Filters Accordion */}
       <FilterSection
         title="Other Filters"
         isOpen={openSection === "other"}
@@ -457,7 +482,6 @@ export const ProductListingPage: React.FC = () => {
   return (
     <div className="w-full bg-gray-100 relative min-h-screen pb-24 md:pb-0">
       <Categories />
-      {/* Expanded Max Width container for wider desktop layouts */}
       <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
           <div className="flex items-center justify-between w-full md:w-auto">
@@ -481,22 +505,18 @@ export const ProductListingPage: React.FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-10">
-          {/* Desktop Left Sidebar Filters */}
           <aside className="hidden md:block w-80 min-w-[20rem] flex-shrink-0">
             <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] overflow-hidden sticky top-6">
               <FilterContent />
             </div>
           </aside>
 
-          {/* Mobile Filter Modal Drawer */}
           {isFilterModalOpen && (
             <div className="fixed inset-0 z-50 flex md:hidden">
-              {/* Backdrop */}
               <div 
                 className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
                 onClick={() => setIsFilterModalOpen(false)}
               />
-              {/* Sliding Drawer */}
               <div className="relative ml-auto w-full max-w-xs bg-white h-full shadow-2xl flex flex-col z-10 overflow-y-auto">
                 <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-20">
                   <span className="font-black text-xl text-gray-950">Filters</span>
@@ -523,7 +543,6 @@ export const ProductListingPage: React.FC = () => {
             </div>
           )}
 
-          {/* Right: Modern Product Grid & Pagination */}
           <main className="flex-grow flex flex-col justify-between">
             <div>
               {isPending ? (
@@ -548,6 +567,7 @@ export const ProductListingPage: React.FC = () => {
                     const isOnSale = item?.is_on_sale === 1;
                     const regPrice = Number(item?.regular_price) || 0;
                     const salePrice = Number(item?.sale_price) || 0;
+                    const isAvailable = item?.is_available !== 0; // Check if available
                     
                     const hasValidDiscount = isOnSale && regPrice > salePrice && salePrice > 0;
                     const discountPercentage = hasValidDiscount 
@@ -610,13 +630,16 @@ export const ProductListingPage: React.FC = () => {
                           </div>
 
                           <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Add to cart or handle add action here if needed
-                            }}
-                            className="bg-gray-950 text-white px-5 py-2.5 rounded-2xl font-bold hover:bg-orange-600 transition-colors cursor-pointer"
+                            onClick={(e) => handleAddToCart(item, e)}
+                            disabled={isAddingToCart || !isAvailable}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all duration-300 ${
+                              isAvailable 
+                                ? "bg-gray-950 text-white shadow-md shadow-gray-950/10 hover:bg-orange-600 hover:shadow-orange-600/20 hover:scale-105 cursor-pointer" 
+                                : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-70"
+                            } disabled:opacity-50`}
                           >
-                            Add
+                            <ShoppingBag size={15} className={isAvailable ? "transition-transform group-hover:-rotate-12" : ""} /> 
+                            {isAvailable ? "Add" : "Unavailable"}
                           </button>
                         </div>
                       </div>
@@ -626,7 +649,6 @@ export const ProductListingPage: React.FC = () => {
               )}
             </div>
 
-            {/* Pagination Component Integration */}
             {foodItems?.length > 0 && (
               <Pagination
                 currentPage={currentPage}
@@ -643,7 +665,27 @@ export const ProductListingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Fixed Bottom Center Filter Button for Mobile View */}
+      {/* Reusable Add to Cart Toast Component Integration */}
+      <AddToCartToast
+        isOpen={isCartToastOpen}
+        onClose={() => setIsCartToastOpen(false)}
+        item={recentlyAddedItem}
+        onViewCart={() => {
+          setIsCartToastOpen(false);
+          setIsCartSideModalOpen(true); // Open your Side Cart Modal here
+        }}
+        onCheckout={() => {
+          setIsCartToastOpen(false);
+          navigate("/checkout"); // Or open your checkout flow
+        }}
+      />
+
+      {/* Side Cart Modal Drawer Integration */}
+      <CartModal
+        isOpen={isCartSideModalOpen}
+        onClose={() => setIsCartSideModalOpen(false)}
+      />
+
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 md:hidden">
         <button
           onClick={() => setIsFilterModalOpen(true)}
