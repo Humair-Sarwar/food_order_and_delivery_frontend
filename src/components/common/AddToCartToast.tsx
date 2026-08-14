@@ -34,7 +34,7 @@ export const AddToCartToast: React.FC<AddToCartToastProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[110]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[110] mb-0!"
           />
 
           {/* Toast Container */}

@@ -243,6 +243,10 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
                   View Cart
                 </button>
                 <button
+                onClick={()=> {
+                  navigation('/checkout')
+                  onClose()
+                }}
                   disabled={isCartEmpty}
                   className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-500 transition-all text-sm shadow-md shadow-orange-600/20 active:scale-95 disabled:bg-orange-200 disabled:shadow-none disabled:cursor-not-allowed disabled:active:scale-100 cursor-pointer"
                 >
