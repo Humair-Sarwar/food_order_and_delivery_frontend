@@ -5,6 +5,7 @@ import Wishlist from "../pages/customer/wishlist/Wishlist";
 import ProfileInfo from "../pages/customer/profile-info/ProfileInfo";
 import Dashboard from "../pages/customer/dashboard/Dashboard";
 import Addresses from "../pages/customer/addresses/Addresses";
+import OrderDetails from "../pages/customer/order-details/OrderDetails";
 
 const CustomerRoutes = () => {
   return (
@@ -14,6 +15,7 @@ const CustomerRoutes = () => {
       <Route path="wishlist" element={<Wishlist />} />
       <Route path="profile-info" element={<ProfileInfo />} />
       <Route path="address" element={<Addresses />} />
+      <Route path="order/:id" element={<OrderDetails />} />
     </Route>
   );
 };

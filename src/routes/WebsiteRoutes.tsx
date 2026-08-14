@@ -8,6 +8,7 @@ import { ProductListingPage } from "../pages/website/product-listing-page/Produc
 import Restaurants from "../pages/website/product-listing-page/Restaurants";
 import { AboutPage } from "../pages/website/AboutPage";
 import { ContactPage } from "../pages/website/ContactPage";
+import OrderDetails from "../pages/customer/order-details/OrderDetails";
 
 const WebsiteRoutes = () => {
   return (
@@ -21,6 +22,7 @@ const WebsiteRoutes = () => {
 
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        
         <Route path="/food-items/All" element={<ProductListingPage />} />
 
         <Route path="/food-items/:slug" element={<ProductListingPage />} />

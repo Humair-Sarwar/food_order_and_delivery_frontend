@@ -2,7 +2,8 @@ import { get } from "../apiMethods";
 
 export interface CheckoutUser {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone?: string | null;
 }
@@ -34,6 +35,15 @@ export interface CheckoutResponse {
   data: {
     user: CheckoutUser;
     cart: CheckoutCart;
+    restaurant?: {
+    id: string | number;
+    name: string;
+    email: string;
+    phone: string;
+    address?: string;
+  city?: string;
+    // add any other restaurant properties you use
+  };
   };
 }
 
