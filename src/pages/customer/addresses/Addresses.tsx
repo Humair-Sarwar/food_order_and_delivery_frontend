@@ -15,32 +15,45 @@ import {
   Hash,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "react-toastify";
+import {
+  useAddresses,
+  useCreateAddress,
+  useDeleteAddress,
+  useUpdateAddress,
+} from "../../../hooks/website/useAddress";
+import ConfirmDeleteModal from "../../../components/common/ConfirmDeleteModal";
 
 export const Addresses: React.FC = () => {
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      title: "Home Address",
-      phone: "+92 300 1234567",
-      area: "F-7 Markaz",
-      fullAddress: "House #123, Street 4, Islamabad 44000",
-      isDefault: true,
-      variant: "amber",
-    },
-    {
-      id: 2,
-      title: "Office Workplace",
-      phone: "+92 321 7654321",
-      area: "Blue Area",
-      fullAddress: "Office #402, Executive Tower, Islamabad 44000",
-      isDefault: false,
-      variant: "slate",
-    },
-  ]);
+  const { data, isPending: isLoadingAddresses } = useAddresses();
+
+  const {
+    mutate: createAddress,
+    isPending: isCreatingAddress,
+  } = useCreateAddress();
+
+  const {
+    mutate: updateAddress,
+    isPending: isUpdatingAddress,
+  } = useUpdateAddress();
+
+  const {
+    mutate: removeAddress,
+    isPending: isDeleting,
+  } = useDeleteAddress();
+
+  const addresses = data?.data ?? [];
 
   // Modal State Management with smooth open/close control
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shouldRenderModal, setShouldRenderModal] = useState(false);
+
+  // Track the address being edited (null if creating a new one)
+  const [selectedAddressToEdit, setSelectedAddressToEdit] = useState<any | null>(null);
+
+  // Delete Modal State Management
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState<any | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -56,7 +69,32 @@ export const Addresses: React.FC = () => {
   // Track touched fields for live inline validation
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (addressToEdit: any = null) => {
+    if (addressToEdit) {
+      setSelectedAddressToEdit(addressToEdit);
+      setFormData({
+        firstName: addressToEdit.first_name || "",
+        lastName: addressToEdit.last_name || "",
+        address: addressToEdit.address || "",
+        apartment: addressToEdit.apartment || "",
+        city: addressToEdit.city || "",
+        postcode: addressToEdit.postcode || "",
+        phone: addressToEdit.phone || "",
+        country: addressToEdit.country || "Pakistan",
+      });
+    } else {
+      setSelectedAddressToEdit(null);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        address: "",
+        apartment: "",
+        city: "",
+        postcode: "",
+        phone: "",
+        country: "Pakistan",
+      });
+    }
     setShouldRenderModal(true);
     setTimeout(() => setIsModalOpen(true), 10);
   };
@@ -66,6 +104,7 @@ export const Addresses: React.FC = () => {
     setTimeout(() => {
       setShouldRenderModal(false);
       setTouched({});
+      setSelectedAddressToEdit(null);
       setFormData({
         firstName: "",
         lastName: "",
@@ -77,6 +116,30 @@ export const Addresses: React.FC = () => {
         country: "Pakistan",
       });
     }, 300); // match transition duration
+  };
+
+  const handleOpenDeleteModal = (address: any) => {
+    setAddressToDelete(address);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setAddressToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!addressToDelete) return;
+
+    removeAddress(addressToDelete.id, {
+      onSuccess: (res: any) => {
+        toast.success(res?.message || "Address deleted successfully!");
+        handleCloseDeleteModal();
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Failed to delete address.");
+      },
+    });
   };
 
   const handleInputChange = (
@@ -117,32 +180,67 @@ export const Addresses: React.FC = () => {
     });
 
     const hasErrors = Object.values(errors).some((err) => err !== "");
-    if (hasErrors) return;
+    if (hasErrors || isCreatingAddress || isUpdatingAddress) return;
 
-    // Add address logic here
-    handleCloseModal();
-  };
+    // Map form data fields to backend payload structure expected by API
+    const payload = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      address: formData.address,
+      apartment: formData.apartment,
+      city: formData.city,
+      postcode: formData.postcode,
+      phone: formData.phone,
+      country: formData.country,
+    };
 
-  const getCardStyle = (variant: string) => {
-    switch (variant) {
-      case "amber":
-        return "bg-gradient-to-br from-amber-50/80 via-white to-white border-amber-200/80 shadow-[0_4px_20px_rgba(245,158,11,0.05)] hover:border-amber-400";
-      case "slate":
-        return "bg-gradient-to-br from-slate-50/90 via-white to-white border-slate-200/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:border-slate-400";
-      default:
-        return "bg-white border-gray-200";
+    if (selectedAddressToEdit) {
+      // Execute Update Mutation
+      updateAddress(
+        { id: selectedAddressToEdit.id, ...payload },
+        {
+          onSuccess: (res: any) => {
+            toast.success(res?.message || "Address updated successfully!");
+            handleCloseModal();
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to update address.");
+          },
+        }
+      );
+    } else {
+      // Execute Create Mutation
+      createAddress(payload, {
+        onSuccess: (res: any) => {
+          toast.success(res?.message || "Address added successfully!");
+          handleCloseModal();
+        },
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.message || "Failed to add address.");
+        },
+      });
     }
   };
 
-  const getIconContainerStyle = (variant: string) => {
-    switch (variant) {
-      case "amber":
-        return "bg-amber-100 text-amber-700";
-      case "slate":
-        return "bg-slate-200 text-slate-800";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
+  // Dynamic card styling helper with rotating modern color themes (amber, emerald, violet, sky)
+  const getCardStyle = (index: number) => {
+    const themes = [
+      "bg-gradient-to-br from-amber-50/80 via-white to-white border-amber-200/80 shadow-[0_4px_20px_rgba(245,158,11,0.05)] hover:border-amber-400",
+      "bg-gradient-to-br from-emerald-50/80 via-white to-white border-emerald-200/80 shadow-[0_4px_20px_rgba(16,185,129,0.05)] hover:border-emerald-400",
+      "bg-gradient-to-br from-violet-50/80 via-white to-white border-violet-200/80 shadow-[0_4px_20px_rgba(139,92,246,0.05)] hover:border-violet-400",
+      "bg-gradient-to-br from-sky-50/80 via-white to-white border-sky-200/80 shadow-[0_4px_20px_rgba(14,165,233,0.05)] hover:border-sky-400",
+    ];
+    return themes[index % themes.length];
+  };
+
+  const getIconContainerStyle = (index: number) => {
+    const iconThemes = [
+      "bg-amber-100 text-amber-700",
+      "bg-emerald-100 text-emerald-700",
+      "bg-violet-100 text-violet-700",
+      "bg-sky-100 text-sky-700",
+    ];
+    return iconThemes[index % iconThemes.length];
   };
 
   return (
@@ -164,7 +262,7 @@ export const Addresses: React.FC = () => {
         </div>
 
         <button
-          onClick={handleOpenModal}
+          onClick={() => handleOpenModal()}
           className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-gray-950 to-gray-900 hover:from-orange-600 hover:to-orange-500 text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-gray-950/15 active:scale-95 cursor-pointer"
         >
           <Plus size={16} /> Add New Address
@@ -173,66 +271,88 @@ export const Addresses: React.FC = () => {
 
       {/* Address Cards List Section */}
       <div className="grid grid-cols-1 gap-4">
-        {addresses.map((addr) => (
-          <div
-            key={addr.id}
-            className={`border rounded-[2rem] p-6 sm:p-7 transition-all duration-300 relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 group ${getCardStyle(
-              addr.variant
-            )}`}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 ${getIconContainerStyle(
-                    addr.variant
-                  )}`}
-                >
-                  <Home size={16} />
-                </div>
-                <h3 className="text-base font-extrabold text-gray-950">
-                  {addr.title}
-                </h3>
-                {addr.isDefault && (
-                  <span className="flex items-center gap-1 bg-orange-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-xs">
-                    <CheckCircle2 size={10} /> Default
-                  </span>
-                )}
-              </div>
-
-              <div className="pl-12 space-y-1 text-xs">
-                <p className="text-gray-600 font-medium">
-                  Phone:{" "}
-                  <span className="text-gray-950 font-bold">{addr.phone}</span>
-                </p>
-                <p className="text-gray-500 font-medium">
-                  Area: <span className="text-gray-800">{addr.area}</span>
-                </p>
-                <p className="text-gray-500 font-medium">
-                  Location:{" "}
-                  <span className="text-gray-800">{addr.fullAddress}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 self-end sm:self-center pl-12 sm:pl-0">
-              <button
-                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-gray-600 hover:text-orange-600 bg-white hover:bg-orange-50 rounded-xl transition-all border border-gray-200/80 hover:border-orange-200 cursor-pointer shadow-2xs"
-                aria-label="Edit Address"
-              >
-                <Pencil size={14} /> Edit
-              </button>
-              <button
-                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-gray-600 hover:text-red-600 bg-white hover:bg-red-50 rounded-xl transition-all border border-gray-200/80 hover:border-red-200 cursor-pointer shadow-2xs"
-                aria-label="Delete Address"
-              >
-                <Trash2 size={14} /> Delete
-              </button>
-            </div>
+        {isLoadingAddresses ? (
+          <div className="p-8 text-center text-gray-400 text-sm font-semibold">
+            Loading addresses...
           </div>
-        ))}
+        ) : addresses.length === 0 ? (
+          <div className="p-12 text-center bg-gray-50 border border-dashed border-gray-200 rounded-[2rem]">
+            <p className="text-gray-500 text-sm font-semibold">No addresses saved yet.</p>
+            <p className="text-gray-400 text-xs mt-1">Click "Add New Address" to create your first delivery location.</p>
+          </div>
+        ) : (
+          addresses.map((addr: any, index: number) => (
+            <div
+              key={addr.id || index}
+              className={`border rounded-[2rem] p-6 sm:p-7 transition-all duration-300 relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 group ${getCardStyle(
+                index
+              )}`}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 ${getIconContainerStyle(
+                      index
+                    )}`}
+                  >
+                    <Home size={16} />
+                  </div>
+                  <h3 className="text-base font-extrabold text-gray-950">
+                    {addr.first_name + " " + addr.last_name}
+                  </h3>
+                  {addr.isDefault && (
+                    <span className="flex items-center gap-1 bg-orange-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                      <CheckCircle2 size={10} /> Default
+                    </span>
+                  )}
+                </div>
+
+                <div className="pl-12 space-y-1 text-xs">
+                  <p className="text-gray-600 font-medium">
+                    Country:{" "}
+                    <span className="text-gray-950 font-bold">{addr?.country}</span>
+                  </p>
+                  <p className="text-gray-500 font-medium">
+                    Address: <span className="text-gray-800">{addr?.address}</span>
+                  </p>
+                  <p className="text-gray-500 font-medium">
+                    Apartment, Suite, etc:{" "}
+                    <span className="text-gray-800">{addr?.apartment ? addr?.apartment : "N/A"}</span>
+                  </p>
+                  <p className="text-gray-500 font-medium">
+                    City: <span className="text-gray-800">{addr?.city}</span>
+                  </p>
+                  <p className="text-gray-500 font-medium">
+                    Postcode: <span className="text-gray-800">{addr?.postcode}</span>
+                  </p>
+                  <p className="text-gray-500 font-medium">
+                    Phone: <span className="text-gray-800">{addr?.phone}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 self-end sm:self-center pl-12 sm:pl-0">
+                <button
+                  onClick={() => handleOpenModal(addr)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-gray-600 hover:text-orange-600 bg-white hover:bg-orange-50 rounded-xl transition-all border border-gray-200/80 hover:border-orange-200 cursor-pointer shadow-2xs"
+                  aria-label="Edit Address"
+                >
+                  <Pencil size={14} /> Edit
+                </button>
+                <button
+                  onClick={() => handleOpenDeleteModal(addr)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-gray-600 hover:text-red-600 bg-white hover:bg-red-50 rounded-xl transition-all border border-gray-200/80 hover:border-red-200 cursor-pointer shadow-2xs"
+                  aria-label="Delete Address"
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Smooth Animated Add New Address Modal */}
+      {/* Smooth Animated Add/Edit Address Modal */}
       {shouldRenderModal && (
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300 ${
@@ -254,10 +374,10 @@ export const Addresses: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-gray-950 tracking-tight">
-                    Add New Address
+                    {selectedAddressToEdit ? "Edit Address" : "Add New Address"}
                   </h2>
                   <p className="text-xs text-gray-400 font-semibold">
-                    Enter your shipping details below
+                    {selectedAddressToEdit ? "Update your shipping details below" : "Enter your shipping details below"}
                   </p>
                 </div>
               </div>
@@ -286,9 +406,6 @@ export const Addresses: React.FC = () => {
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-orange-500 focus:bg-white transition-all cursor-pointer"
                 >
                   <option value="Pakistan">Pakistan</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="United States">United States</option>
-                  <option value="Canada">Canada</option>
                 </select>
               </div>
 
@@ -474,15 +591,30 @@ export const Addresses: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-orange-600/20 active:scale-95 cursor-pointer"
+                  disabled={isCreatingAddress || isUpdatingAddress}
+                  className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-orange-600/20 active:scale-95 cursor-pointer disabled:opacity-50"
                 >
-                  Save Address
+                  {isCreatingAddress || isUpdatingAddress
+                    ? "Saving..."
+                    : selectedAddressToEdit
+                    ? "Update Address"
+                    : "Save Address"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        title="Delete Address"
+        message="Are you sure you want to permanently delete this address? This action cannot be undone."
+      />
     </div>
   );
 };
