@@ -4,12 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import no_image from "../../../assets/images/empty-image.jpg";
 import { useWishlist, useRemoveFromWishlist } from "../../../hooks/website/useWishlist";
+import { useAddToCart } from "../../../hooks/website/useCart";
+// Agar AddToCartToast koi custom component ya function hai, to yahan import karein:
+// import { AddToCartToast } from "../../../components/common/AddToCartToast"; 
 import ConfirmDeleteModal from "../../../components/common/ConfirmDeleteModal";
 import Pagination from "../../../components/common/Pagination";
+import { AddToCartToast } from "../../../components/common/AddToCartToast";
 
 export const Wishlist = () => {
   const navigate = useNavigate();
-
+  const [isCartToastOpen, setIsCartToastOpen] = useState(false);
+const [recentlyAddedItem, setRecentlyAddedItem] = useState<any>(null);
   // Pagination & Search States
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -23,6 +28,7 @@ export const Wishlist = () => {
   });
 
   const { mutate: removeFromWishlist, isPending: isDeleting } = useRemoveFromWishlist();
+  const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
 
   // State for Delete Confirmation Modal (stores food_item_id)
   const [selectedItemToDelete, setSelectedItemToDelete] = useState<string | null>(null);
@@ -70,6 +76,54 @@ export const Wishlist = () => {
       }
     );
   };
+
+  const handleAddToCart = (item: any, e: React.MouseEvent) => {
+  e.stopPropagation();
+
+  const cartId = localStorage.getItem("cart_id");
+
+  addToCart(
+    {
+      food_item_id: item.id,
+      quantity: 1,
+      ...(cartId && { cart_id: cartId }),
+    },
+    {
+      onSuccess: (res: any) => {
+        // Save cart ID if backend returns a new one
+        const newCartId = res?.data?.cart_id || res?.cart_id;
+
+        if (newCartId) {
+          localStorage.setItem("cart_id", newCartId);
+        }
+
+        // Prepare item for AddToCartToast
+        setRecentlyAddedItem({
+          title: item?.title,
+          image: item?.image?.media_path,
+          restaurantName: item?.restaurant?.name,
+          price:
+            item?.is_on_sale && item?.sale_price !== null
+              ? item?.sale_price
+              : item?.regular_price,
+        });
+
+        // Open custom Add To Cart Toast
+        setIsCartToastOpen(true);
+
+        // Notify Header about cart change
+        window.dispatchEvent(new Event("cartUpdated"));
+      },
+
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to add item to cart."
+        );
+      },
+    }
+  );
+};
 
   return (
     <div className="space-y-8">
@@ -208,11 +262,9 @@ export const Wishlist = () => {
                     </div>
 
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevents triggering card navigation
-                        console.log("Added to cart from wishlist:", item.id);
-                      }}
-                      className="flex items-center gap-2 bg-gray-950 text-white px-5 py-3 rounded-2xl font-bold text-sm hover:bg-orange-600 shadow-md transition-all cursor-pointer active:scale-95"
+                      onClick={(e) => handleAddToCart(item, e)}
+                      disabled={isAddingToCart}
+                      className="flex items-center gap-2 bg-gray-950 text-white px-5 py-3 rounded-2xl font-bold text-sm hover:bg-orange-600 shadow-md transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ShoppingBag size={16} strokeWidth={2.2} /> Add
                     </button>
@@ -234,7 +286,7 @@ export const Wishlist = () => {
               onPageChange={(newPage) => setPage(newPage)}
               onEntriesPerPageChange={(newEntries) => {
                 setPerPage(newEntries);
-                setPage(1); // Reset to page 1 when rows per page changes
+                setPage(1);
               }}
             />
           )}
@@ -250,6 +302,21 @@ export const Wishlist = () => {
         message="Are you sure you want to remove this food item from your saved wishlist?"
         isLoading={isDeleting}
       />
+      <AddToCartToast
+  isOpen={isCartToastOpen}
+  onClose={() => setIsCartToastOpen(false)}
+  item={recentlyAddedItem}
+  onViewCart={() => {
+    setIsCartToastOpen(false);
+    // Header wala cart button use karne ke bajaye
+    // yahan tum apne cart page par navigate kar sakte ho
+    navigate("/cart");
+  }}
+  onCheckout={() => {
+    setIsCartToastOpen(false);
+    navigate("/checkout");
+  }}
+/>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/images/logo.png";
 import banner_login from "../../assets/images/register-cover.jpg";
 import { useRegister } from "../../hooks/auth/useRegister";
@@ -157,13 +157,13 @@ const Register: React.FC = () => {
         <div className="mx-auto w-full max-w-md">
           {/* Logo & Header Section */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <NavLink to={'/'} className="flex items-center justify-center gap-2 mb-4">
               <img
                 src={logo}
                 alt="StackFood Logo"
                 className="w-40 sm:w-40 md:w-50 h-auto object-contain transition-all duration-300"
               />
-            </div>
+            </NavLink>
             <h2 className="text-xl font-bold text-gray-700 tracking-tight">
               Create Your Customer Account
             </h2>

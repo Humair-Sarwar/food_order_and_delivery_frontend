@@ -1,15 +1,22 @@
 import React, { useState } from "react";
 import { Header } from "../components/website/Header";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import WhatsAppButton from "../components/website/WhatsAppChat";
 import { ChatWidget } from "../components/website/ChatWidget";
 import { Footer } from "../components/website/Footer";
-import { ShoppingBag, Heart, User, LayoutDashboard, ChevronRight, LogOut, Menu, X } from "lucide-react";
+import { ShoppingBag, Heart, User, LayoutDashboard, ChevronRight, LogOut, Menu, X, MapPin } from "lucide-react";
 import { useProfileInfo } from "../hooks/website/useProfile";
+import { useAppDispatch } from "../hooks/redux";
+import { logout as logoutAction } from "../store/slices/authSlice";
+import { toast } from "react-toastify";
+import { useLogout } from "../hooks/auth/useLogin";
 
 const CustomerLayout = () => {
   const { data, isLoading } = useProfileInfo();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { mutate: mutateLogout, isPending: isLoggingOut } = useLogout();
 
   const profile = data?.data;
   const customerNavItems = [
@@ -30,11 +37,36 @@ const CustomerLayout = () => {
       icon: <Heart size={18} />,
     },
     {
+      title: "Addresses",
+      path: "/user/address",
+      icon: <MapPin size={18} />,
+    },
+    {
       title: "Profile Info",
       path: "/user/profile-info",
       icon: <User size={18} />,
     },
   ];
+
+  // Logout Handler Function
+  const handleLogout = () => {
+    mutateLogout(undefined, {
+      onSuccess: () => {
+        dispatch(logoutAction());
+        localStorage.removeItem("cart_id");
+        setIsMobileMenuOpen(false);
+        toast.success("Logged out successfully");
+        navigate("/login", { replace: true });
+      },
+      onError: () => {
+        // Fallback even if API fails
+        dispatch(logoutAction());
+        localStorage.removeItem("cart_id");
+        setIsMobileMenuOpen(false);
+        navigate("/login", { replace: true });
+      },
+    });
+  };
 
   // Menu content ko reusable banane ke liye ek variable ya component
   const renderSidebarContent = () => (
@@ -120,14 +152,12 @@ const CustomerLayout = () => {
       {/* Logout Button */}
       <div className="mt-6 pt-6 border-t border-gray-100">
         <button 
-          onClick={() => {
-            console.log("Logout clicked");
-            setIsMobileMenuOpen(false);
-          }}
-          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold text-red-600 hover:bg-red-50 transition-all cursor-pointer group"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold text-red-600 hover:bg-red-50 transition-all cursor-pointer group disabled:opacity-50"
         >
           <LogOut size={18} className="transition-transform group-hover:-translate-x-1" />
-          <span className="text-sm">Logout</span>
+          <span className="text-sm">{isLoggingOut ? "Logging out..." : "Logout"}</span>
         </button>
       </div>
     </div>

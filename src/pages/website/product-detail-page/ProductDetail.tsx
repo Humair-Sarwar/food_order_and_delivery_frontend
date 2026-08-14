@@ -15,15 +15,20 @@ import {
 import { RelatedProducts } from "./RelatedProducts";
 import { useFoodItemDetail } from "../../../hooks/website/useFoodItems";
 import { useAddToWishlist, useRemoveFromWishlist } from "../../../hooks/website/useWishlist";
-import { useParams } from "react-router-dom";
+// Import cart hook (adjust the import path based on your project structure)
+import { useAddToCart } from "../../../hooks/website/useCart";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import no_image from "../../../assets/images/empty-image.jpg";
+import { AddToCartToast } from "../../../components/common/AddToCartToast";
 
 export const ProductDetail: React.FC = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
-
+  const [isCartToastOpen, setIsCartToastOpen] = useState(false);
+  const [recentlyAddedItem, setRecentlyAddedItem] = useState<any>(null);
   // Check if user is logged in (adjust token key based on your project configuration)
   const isLoggedIn = Boolean(localStorage.getItem("token")); 
   // Alternatively, if you have an auth context/hook, use that:
@@ -35,6 +40,9 @@ export const ProductDetail: React.FC = () => {
 
   const { mutate: addToWishlist, isPending: isAddingWishlist } = useAddToWishlist();
   const { mutate: removeFromWishlist, isPending: isRemovingWishlist } = useRemoveFromWishlist();
+  
+  // Add to cart hook initialization
+  const { mutate: addToCart, isPending: isAddingCart } = useAddToCart();
 
   const foodItem = data?.data;
   const apiWishlistStatus = (data?.data as any)?.is_wishlisted;
@@ -80,6 +88,51 @@ export const ProductDetail: React.FC = () => {
       );
     }
   };
+
+  // Handle Add to Cart
+  const handleAddToCart = () => {
+  if (!id || isAddingCart || !isAvailable) return;
+
+  const cartId = localStorage.getItem("cart_id");
+
+  addToCart(
+    {
+      food_item_id: id,
+      quantity: quantity,
+      ...(cartId && { cart_id: cartId }),
+    },
+    {
+      onSuccess: (res: any) => {
+        // Save cart ID for future additions
+        const newCartId = res?.data?.cart_id || res?.cart_id;
+
+        if (newCartId) {
+          localStorage.setItem("cart_id", newCartId);
+        }
+
+        // Save item information for AddToCartToast
+        setRecentlyAddedItem({
+          title: foodItem?.title,
+          image: foodItem?.image?.media_path,
+          restaurantName: foodItem?.restaurant?.name,
+          price: hasValidDiscount
+            ? Number(foodItem?.sale_price)
+            : Number(foodItem?.regular_price),
+        });
+
+        // Open custom Add To Cart Toast
+        setIsCartToastOpen(true);
+      },
+
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to add item to cart."
+        );
+      },
+    }
+  );
+};
 
   // Discount & Price validation logic
   const isOnSale = foodItem?.is_on_sale === 1;
@@ -254,13 +307,13 @@ export const ProductDetail: React.FC = () => {
               )}
             </div>
 
-            {/* Controls */}
+            {/* Controls & Add to Cart */}
             <div className="flex items-center gap-4 mt-8">
               <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl w-fit border border-gray-100">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={!isAvailable}
-                  className="w-10 h-10 flex cursor-pointer items-center justify-center rounded-xl bg-white text-gray-600 shadow-sm border border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-10 h-10 flex cursor-pointer items-center justify-center rounded-xl bg-white text-gray-600 shadow-sm border border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   -
                 </button>
@@ -270,21 +323,23 @@ export const ProductDetail: React.FC = () => {
                 <button
                   onClick={() => setQuantity(quantity + 1)}
                   disabled={!isAvailable}
-                  className="w-10 h-10 flex cursor-pointer items-center justify-center rounded-xl bg-white text-gray-600 shadow-sm border border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-10 h-10 flex cursor-pointer items-center justify-center rounded-xl bg-white text-gray-600 shadow-sm border border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   +
                 </button>
               </div>
 
               <button
-                disabled={!isAvailable}
+                onClick={handleAddToCart}
+                disabled={!isAvailable || isAddingCart}
                 className={`flex-grow flex items-center justify-center gap-2 py-4 rounded-2xl font-bold transition-all ${
-                  isAvailable
+                  isAvailable && !isAddingCart
                     ? "bg-gray-950 text-white hover:bg-gray-800 active:scale-95 cursor-pointer"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
-                <ShoppingBag size={20} /> Add to Cart
+                <ShoppingBag size={20} /> 
+                {isAddingCart ? "Adding..." : "Add to Cart"}
               </button>
             </div>
 
@@ -362,6 +417,26 @@ export const ProductDetail: React.FC = () => {
         </div>
       </div>
       <RelatedProducts />
+      <AddToCartToast
+  isOpen={isCartToastOpen}
+  onClose={() => setIsCartToastOpen(false)}
+  item={recentlyAddedItem}
+  onViewCart={() => {
+    setIsCartToastOpen(false);
+
+    // Agar CartModal use karna hai to yahan open karo
+    // setIsCartSideModalOpen(true);
+
+    // Ya direct cart page:
+    navigate("/cart");
+  }}
+  onCheckout={() => {
+    setIsCartToastOpen(false);
+
+    // Checkout page
+    navigate("/checkout");
+  }}
+/>
     </>
   );
 };

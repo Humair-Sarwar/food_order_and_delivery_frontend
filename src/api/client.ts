@@ -42,7 +42,14 @@ api.interceptors.response.use(
 
   (error) => {
     // Auto logout on unauthorized
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url;
+
+    const isAuthRequest =
+      url?.includes("/auth/login") ||
+      url?.includes("/auth/register");
+
+    if (status === 401 && !isAuthRequest) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
 
