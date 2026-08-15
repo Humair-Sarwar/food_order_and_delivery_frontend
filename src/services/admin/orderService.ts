@@ -1,5 +1,6 @@
 import type { ApiResponse } from "../../api/client";
-import { get } from "../apiMethods";
+import api from "../../api/client";
+import { get, patch } from "../apiMethods";
 
 // =====================================================
 // PAGINATION
@@ -172,4 +173,65 @@ export const AdminOrderDetails = (
   return get<ApiResponse<AdminOrder>>(
     `/api/admin/orders/details/${params.order_id}`,
   );
+};
+
+
+
+
+
+
+
+
+// =====================================================
+// UPDATE ORDER STATUS PARAMS
+// =====================================================
+
+export interface AdminOrderStatusUpdateParams {
+  order_id: string;
+  status:
+    | "pending"
+    | "confirmed"
+    | "preparing"
+    | "ready_for_pickup"
+    | "out_for_delivery"
+    | "completed"
+    | "cancelled";
+}
+
+// =====================================================
+// UPDATE ORDER STATUS
+// =====================================================
+
+export const AdminOrderStatusUpdate = (
+  params: AdminOrderStatusUpdateParams
+): Promise<ApiResponse<AdminOrder>> => {
+  return patch<ApiResponse<AdminOrder>>(
+    `/api/admin/orders/${params.order_id}/status`,
+    {
+      status: params.status,
+    }
+  );
+};
+
+
+export interface OrdersFetchProps {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  status?: string;
+  payment_method?: string;
+}
+
+export const OrderExportCsv = async (
+  params: OrdersFetchProps
+): Promise<Blob> => {
+  const response = await api.get(
+    "/api/admin/orders/export/csv",
+    {
+      params,
+      responseType: "blob",
+    }
+  );
+
+  return response.data;
 };

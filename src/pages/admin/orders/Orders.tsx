@@ -10,11 +10,14 @@ import {
   CreditCard, 
   Wallet,
   ShoppingBag,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ChefHat,
+  PackageCheck,
+  Bike
 } from 'lucide-react';
 import { GenericTable } from '../../../components/common/GenericTable';
 import Pagination from '../../../components/common/Pagination';
-import { useAdminOrderLists } from '../../../hooks/admin/useOrder';
+import { useAdminOrderLists, useOrderExportCsv } from '../../../hooks/admin/useOrder';
 import { useNavigate } from 'react-router-dom';
 
 // --- TypeScript Interfaces ---
@@ -38,17 +41,37 @@ export interface OrderItem {
 
 export interface TabConfig {
   name: string;
-  count: string;
+  statusValue?: string;
   color: string;
 }
 
 export default function Orders() {
+  const {
+  mutate: exportCsv,
+  isPending: isExporting,
+} = useOrderExportCsv();
   const [activeTab, setActiveTab] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [paymentFilter, setPaymentFilter] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  // Status Tab Configuration mapped to Laravel migration enum
+  const tabs: TabConfig[] = [
+    { name: 'All', color: 'bg-gray-100 text-gray-700' },
+    { name: 'Pending', statusValue: 'pending', color: 'bg-amber-500/10 text-amber-600' },
+    { name: 'Confirmed', statusValue: 'confirmed', color: 'bg-blue-500/10 text-blue-600' },
+    { name: 'Preparing', statusValue: 'preparing', color: 'bg-indigo-500/10 text-indigo-600' },
+    { name: 'Ready', statusValue: 'ready_for_pickup', color: 'bg-purple-500/10 text-purple-600' },
+    { name: 'Out for Delivery', statusValue: 'out_for_delivery', color: 'bg-orange-500/10 text-orange-600' },
+    { name: 'Completed', statusValue: 'completed', color: 'bg-emerald-500/10 text-emerald-600' },
+    { name: 'Cancelled', statusValue: 'cancelled', color: 'bg-red-500/10 text-red-600' }
+  ];
+
+  // Pass active tab's status value directly to API hook
+  const activeTabConfig = tabs.find(t => t.name === activeTab);
+
   const {
     data,
     isPending,
@@ -57,21 +80,12 @@ export default function Orders() {
     page,
     per_page: perPage,
     search: searchQuery || undefined,
-    status: activeTab !== 'All' ? activeTab.toLowerCase() : undefined,
+    status: activeTabConfig?.statusValue || undefined,
     payment_method: paymentFilter || undefined,
   });
 
   const rawOrders: any = data?.data || [];
   const pagination: any = data?.pagination;
-
-  // Status Tab Configuration
-  const tabs: TabConfig[] = [
-    { name: 'All', count: pagination?.total?.toString() || '0', color: 'bg-gray-100 text-gray-700' },
-    { name: 'Pending', count: '12', color: 'bg-amber-500/10 text-amber-600' },
-    { name: 'Processing', count: '8', color: 'bg-blue-500/10 text-blue-600' },
-    { name: 'Delivered', count: '1,430', color: 'bg-emerald-500/10 text-emerald-600' },
-    { name: 'Canceled', count: '32', color: 'bg-red-500/10 text-red-600' }
-  ];
 
   // Map API response to OrderItem format
   const ordersData: OrderItem[] = useMemo(() => {
@@ -81,18 +95,42 @@ export default function Orders() {
       let statusClass = 'bg-amber-500/10 text-amber-600 border-amber-500/20';
       let StatusIcon = Clock;
 
-      if (statusLower === 'delivered') {
-        statusLabel = 'Delivered';
-        statusClass = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-        StatusIcon = CheckCircle2;
-      } else if (statusLower === 'processing') {
-        statusLabel = 'Processing';
-        statusClass = 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-        StatusIcon = Clock;
-      } else if (statusLower === 'canceled' || statusLower === 'cancelled') {
-        statusLabel = 'Canceled';
-        statusClass = 'bg-red-500/10 text-red-600 border-red-500/20';
-        StatusIcon = XCircle;
+      switch (statusLower) {
+        case 'completed':
+          statusLabel = 'Completed';
+          statusClass = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+          StatusIcon = CheckCircle2;
+          break;
+        case 'confirmed':
+          statusLabel = 'Confirmed';
+          statusClass = 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+          StatusIcon = CheckCircle2;
+          break;
+        case 'preparing':
+          statusLabel = 'Preparing';
+          statusClass = 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20';
+          StatusIcon = ChefHat;
+          break;
+        case 'ready_for_pickup':
+          statusLabel = 'Ready For Pickup';
+          statusClass = 'bg-purple-500/10 text-purple-600 border-purple-500/20';
+          StatusIcon = PackageCheck;
+          break;
+        case 'out_for_delivery':
+          statusLabel = 'Out For Delivery';
+          statusClass = 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+          StatusIcon = Bike;
+          break;
+        case 'cancelled':
+          statusLabel = 'Cancelled';
+          statusClass = 'bg-red-500/10 text-red-600 border-red-500/20';
+          StatusIcon = XCircle;
+          break;
+        default:
+          statusLabel = 'Pending';
+          statusClass = 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+          StatusIcon = Clock;
+          break;
       }
 
       const formattedDate = order.created_at
@@ -246,10 +284,23 @@ export default function Orders() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 h-10 text-xs font-bold bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm transition-all active:scale-98 cursor-pointer self-start sm:self-auto">
-          <ArrowDownToLine className="w-4 h-4 text-gray-400" />
-          <span>Export Manifest</span>
-        </button>
+        <button
+  onClick={() => {
+    exportCsv({
+      search: searchQuery || undefined,
+      status: activeTabConfig?.statusValue || undefined,
+      payment_method: paymentFilter || undefined,
+    });
+  }}
+  disabled={isExporting}
+  className="flex items-center gap-2 px-4 h-10 text-xs font-bold bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  <ArrowDownToLine className="w-4 h-4 text-gray-400" />
+
+  <span>
+    {isExporting ? "Exporting..." : "Export Manifest"}
+  </span>
+</button>
       </div>
 
       {/* 2. DYNAMIC SEGMENTED STATUS TABS ROW */}
@@ -268,11 +319,13 @@ export default function Orders() {
             }`}
           >
             <span>{tab.name}</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-black rounded-md ${
-              activeTab === tab.name ? 'bg-white/20 text-white' : tab.color
-            }`}>
-              {tab.name === 'All' ? pagination?.total || tab.count : tab.count}
-            </span>
+            {tab.name === 'All' && pagination?.total !== undefined && (
+              <span className={`px-1.5 py-0.5 text-[10px] font-black rounded-md ${
+                activeTab === tab.name ? 'bg-white/20 text-white' : tab.color
+              }`}>
+                {pagination.total}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -313,8 +366,19 @@ export default function Orders() {
       {/* 4. ORDERS MASTER DATA MATRIX TABLE CARD */}
       <div className="bg-white border border-gray-200/80 rounded-2xl shadow-sm overflow-hidden">
         {isPending ? (
-          <div className="p-12 text-center text-xs font-bold text-gray-400">
-            Loading orders registry...
+          <div className="p-6 space-y-4 animate-pulse">
+            <div className="h-10 bg-gray-100 rounded-xl w-full" />
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-3 border-b border-gray-100 last:border-0">
+                <div className="h-4 bg-gray-100 rounded w-24" />
+                <div className="h-4 bg-gray-100 rounded w-32" />
+                <div className="h-4 bg-gray-100 rounded w-40" />
+                <div className="h-4 bg-gray-100 rounded w-28" />
+                <div className="h-4 bg-gray-100 rounded w-20" />
+                <div className="h-6 bg-gray-100 rounded-full w-24" />
+                <div className="h-8 w-8 bg-gray-100 rounded-xl" />
+              </div>
+            ))}
           </div>
         ) : isError ? (
           <div className="p-12 text-center text-xs font-bold text-red-500">

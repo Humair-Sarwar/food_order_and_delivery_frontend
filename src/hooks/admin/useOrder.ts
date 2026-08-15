@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { AdminOrderDetails, AdminOrderLists, type AdminOrderDetailsParams, type AdminOrderListsParams } from "../../services/admin/orderService";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AdminOrderDetails, AdminOrderLists, AdminOrderStatusUpdate, OrderExportCsv, type AdminOrderDetailsParams, type AdminOrderListsParams, type AdminOrderStatusUpdateParams, type OrdersFetchProps } from "../../services/admin/orderService";
 
 
 
@@ -31,5 +31,58 @@ export const useAdminOrderDetails = (
     enabled: !!params.order_id,
 
     staleTime: 1000 * 60 * 5,
+  });
+};
+
+
+
+
+export const useAdminOrderStatusUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: AdminOrderStatusUpdateParams) =>
+      AdminOrderStatusUpdate(params),
+
+    onSuccess: (_, variables) => {
+      // Refresh order details
+      queryClient.invalidateQueries({
+        queryKey: ["admin-order-details", variables.order_id],
+      });
+
+      // Refresh admin order list
+      queryClient.invalidateQueries({
+        queryKey: ["admin-order-lists"],
+      });
+    },
+  });
+};
+
+
+
+export const useOrderExportCsv = () => {
+  return useMutation({
+    mutationFn: (params: OrdersFetchProps) =>
+      OrderExportCsv(params),
+
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `orders-${new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:T]/g, "-")}.csv`;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    },
   });
 };

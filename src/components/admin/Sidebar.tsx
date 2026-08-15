@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   Image,
   Layers,
-  Utensils
+  Utensils,
+  Receipt
 } from 'lucide-react';
 import logo from "../../assets/images/logo.png";
 import { useAppDispatch } from "../../hooks/redux"; 
@@ -62,7 +63,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobile
       title: "Overview",
       items: [
         { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
-        { path: '/admin/orders', label: 'Orders', icon: ShoppingBag, badge: '12' },
+        { path: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+        { path: '/admin/reports', label: 'Reports', icon: Receipt },
       ]
     },
     {
@@ -110,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobile
       </div>
 
       {/* Primary Navigation Categorized Links Scroll Container */}
-      <nav className={`flex-1 px-3 py-6 overflow-y-auto custom-scrollbar transition-all duration-300 ${
+      <nav className={`flex-1 px-3 py-6 overflow-y-auto transition-all duration-300 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-800/60 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-700 ${
         isCollapsed ? 'space-y-2' : 'space-y-6'
       }`}>
         {menuSections.map((section, idx) => (
