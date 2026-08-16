@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminOrderDetails, AdminOrderLists, AdminOrderStatusUpdate, OrderExportCsv, type AdminOrderDetailsParams, type AdminOrderListsParams, type AdminOrderStatusUpdateParams, type OrdersFetchProps } from "../../services/admin/orderService";
+import { useEffect } from "react";
 
 
 
@@ -23,7 +24,9 @@ export const useAdminOrderLists = (
 export const useAdminOrderDetails = (
   params: AdminOrderDetailsParams
 ) => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["admin-order-details", params.order_id],
 
     queryFn: () => AdminOrderDetails(params),
@@ -32,6 +35,19 @@ export const useAdminOrderDetails = (
 
     staleTime: 1000 * 60 * 5,
   });
+
+  useEffect(() => {
+    if (query.isSuccess) {
+      queryClient.invalidateQueries({
+        queryKey: ["admin-notifications"],
+      });
+    }
+  }, [
+    query.isSuccess,
+    queryClient,
+  ]);
+
+  return query;
 };
 
 

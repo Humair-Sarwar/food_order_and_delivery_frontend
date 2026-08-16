@@ -65,7 +65,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
 
   // Dropdown values dataset
-  const rowsOptions = [1, 15, 25, 30, 50, 60];
+  const rowsOptions = [10, 15, 25, 30, 50, 60];
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t border-gray-100 bg-white mt-4 rounded-2xl shadow-sm">

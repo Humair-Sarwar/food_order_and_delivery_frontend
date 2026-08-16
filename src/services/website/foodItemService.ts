@@ -96,3 +96,79 @@ export const SearchFoodItems = (
     params
   );
 };
+
+
+
+
+export interface WebsiteSettings {
+  id: number;
+  site_name: string;
+  email: string | null;
+  phone: string | null;
+  whatsapp_number: string | null;
+  whatsapp_enabled: boolean;
+  footer_description: string | null;
+  logo_id: string | null;
+  cod_enabled: boolean;
+  digital_payment_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  logo?: {
+    id: string;
+    media_path: string;
+    [key: string]: any;
+  } | null;
+}
+
+export const WebsiteSettingsGet = (): Promise<
+  ApiResponse<WebsiteSettings>
+> => {
+  return get<ApiResponse<WebsiteSettings>>("/api/web/settings");
+};
+
+
+
+
+
+
+
+
+
+
+export interface RelatedProductsParams {
+  food_item_id?: string;
+}
+
+export interface RelatedProductsResponse {
+  food_item_id: string;
+  category: {
+    id: string;
+    title: string;
+    category_slug: string;
+  };
+  products: WebFoodItem[];
+}
+
+export const RelatedProducts = (
+  params?: RelatedProductsParams
+): Promise<ApiResponse<RelatedProductsResponse>> => {
+  return get<ApiResponse<RelatedProductsResponse>>(
+    "/api/web/related-products/detail-page",
+    params
+  );
+};
+
+
+
+
+export interface LatestFoodItemsParams {
+  limit?: number;
+}
+
+export const LatestFoodItems = (): Promise<
+  ApiResponse<WebFoodItem[]>
+> => {
+  return get<ApiResponse<WebFoodItem[]>>(
+    "/api/web/latest-food-items"
+  );
+};

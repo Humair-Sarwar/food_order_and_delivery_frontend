@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   FoodItemDetailPage,
+  LatestFoodItems,
+  RelatedProducts,
   SearchFoodItems,
   WebFoodItems,
+  WebsiteSettingsGet,
   type FoodItemDetailParams,
+  type RelatedProductsParams,
   type SearchFoodItemsParams,
   type WebFoodItemsParams,
 } from "../../services/website/foodItemService";
@@ -39,5 +43,41 @@ export const useSearchFoodItems = (
     queryFn: () => SearchFoodItems(params),
 
     enabled: !!params?.search?.trim(),
+  });
+};
+
+
+
+
+export const useWebsiteSettings = () => {
+  return useQuery({
+    queryKey: ["website-settings"],
+    queryFn: WebsiteSettingsGet,
+  });
+};
+
+
+
+
+
+
+
+
+
+export const useRelatedProducts = (
+  params?: RelatedProductsParams
+) => {
+  return useQuery({
+    queryKey: ["related-products", params],
+    queryFn: () => RelatedProducts(params),
+    enabled: !!params?.food_item_id,
+  });
+};
+
+
+export const useLatestFoodItems = () => {
+  return useQuery({
+    queryKey: ["latest-food-items"],
+    queryFn: LatestFoodItems,
   });
 };

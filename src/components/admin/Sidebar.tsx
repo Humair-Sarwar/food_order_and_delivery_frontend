@@ -210,7 +210,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, isMobile
                   <span className="text-xs font-extrabold text-gray-200 truncate">System Admin</span>
                   <ShieldCheck className="w-3 h-3 text-orange-400 shrink-0" />
                 </div>
-                <span className="text-[10px] font-medium text-gray-500 truncate">admin@stackfood.com</span>
+                <span className="text-[10px] font-medium text-gray-500 truncate">admin@ofods.com</span>
               </div>
             )}
           </div>

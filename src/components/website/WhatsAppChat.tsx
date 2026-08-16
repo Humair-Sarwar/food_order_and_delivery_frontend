@@ -3,15 +3,16 @@ import { FaWhatsapp } from 'react-icons/fa6';
 
 interface WhatsAppButtonProps {
   data: {
-    whatsapp_no: string | number;
+    whatsapp_number: string | number;
+    site_name: string | null;
   }
 }
 
 const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({ data }) => {
 
-  const cleanNumber = data?.whatsapp_no?.toString().replace(/\D/g, '');
+  const cleanNumber = data?.whatsapp_number?.toString().replace(/\D/g, '');
   
-  const defaultMsg = encodeURIComponent("Hello QuizMaster! I need some help regarding the platform.");
+  const defaultMsg = encodeURIComponent(`Hello ${data?.site_name ? data?.site_name : "OFODS"}! I need some help regarding the platform.`);
 
   return (
     <div className='whatsAppFixedFloatButton fixed md:bottom-7! md:right-7! bottom-4! right-4! z-[55]!'>
