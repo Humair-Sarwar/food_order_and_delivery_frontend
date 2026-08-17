@@ -238,7 +238,7 @@ Admin routes use:
 Create a `.env` file in the project root:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
 Update the URL according to your backend environment.
@@ -246,7 +246,7 @@ Update the URL according to your backend environment.
 For example:
 
 ```text
-http://localhost:8000
+http://127.0.0.1:8000
 ```
 
 or your production API URL.
@@ -282,7 +282,7 @@ Create the environment file:
 Add:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
 Start the development server:
