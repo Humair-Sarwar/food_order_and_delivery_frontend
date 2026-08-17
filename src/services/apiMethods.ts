@@ -40,3 +40,12 @@ export const del = async <T>(
 
   return res.data;
 };
+
+
+export const patch = async <T>(
+  url: string,
+  data: any
+): Promise<T> => {
+  const res: AxiosResponse<T> = await api.patch(url, data);
+  return res.data;
+};

@@ -28,6 +28,23 @@ export const FoodItemOrders = () => {
   const perPage = 10;
 
   // =========================
+  // API PARAMS MAPPING
+  // =========================
+
+  const getApiStatusParam = (tab: string) => {
+    switch (tab) {
+      case "processing":
+        return "pending";
+      case "completed":
+        return "completed";
+      case "cancelled":
+        return "cancelled";
+      default:
+        return undefined;
+    }
+  };
+
+  // =========================
   // API
   // =========================
 
@@ -39,6 +56,7 @@ export const FoodItemOrders = () => {
     page: currentPage,
     per_page: perPage,
     search: searchQuery || undefined,
+    status: getApiStatusParam(activeTab),
   });
 
   // =========================
@@ -46,26 +64,9 @@ export const FoodItemOrders = () => {
   // =========================
   const navigate = useNavigate();
   const orders = data?.data ?? [];
-
   const pagination: any = data?.pagination;
 
-  // =========================
-  // STATUS FILTER
-  // =========================
-
   const ordersArray = Array.isArray(orders) ? orders : (orders?.data || []);
-
-const filteredOrders = ordersArray.filter((order: any) => {
-  if (activeTab === "all") {
-    return true;
-  }
-
-  if (activeTab === "processing") {
-    return order.status?.toLowerCase() === "pending";
-  }
-
-  return order.status?.toLowerCase() === activeTab.toLowerCase();
-});
 
   // =========================
   // SEARCH CHANGE
@@ -92,14 +93,15 @@ const filteredOrders = ordersArray.filter((order: any) => {
   // =========================
 
   const getStatusBadge = (status: string) => {
-    const normalizedStatus = status.toLowerCase();
+    const normalizedStatus = status?.toLowerCase() || "";
 
     switch (normalizedStatus) {
+      case "completed":
       case "delivered":
         return (
           <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100/60 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
             <CheckCircle2 size={13} className="text-emerald-600" />
-            Delivered
+            {normalizedStatus === "completed" ? "Completed" : "Delivered"}
           </span>
         );
 
@@ -109,6 +111,31 @@ const filteredOrders = ordersArray.filter((order: any) => {
           <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-100/60 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
             <Clock size={13} className="text-amber-600 animate-pulse" />
             Processing
+          </span>
+        );
+
+      case "confirmed":
+        return (
+          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100/60 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
+            <Clock size={13} className="text-blue-600" />
+            Confirmed
+          </span>
+        );
+
+      case "preparing":
+        return (
+          <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-100/60 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
+            <Clock size={13} className="text-orange-600 animate-pulse" />
+            Preparing
+          </span>
+        );
+
+      case "ready_for_pickup":
+      case "out_for_delivery":
+        return (
+          <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 border border-purple-100/60 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
+            <Clock size={13} className="text-purple-600" />
+            {normalizedStatus === "ready_for_pickup" ? "Ready For Pickup" : "Out For Delivery"}
           </span>
         );
 
@@ -163,25 +190,25 @@ const filteredOrders = ordersArray.filter((order: any) => {
 
   if (isPending && !data) {
     return (
-      <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6 animate-pulse">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-gray-950">
-              Food Item Orders
-            </h1>
-            <p className="text-xs font-semibold text-gray-400 mt-1">
-              Track and manage your recent food orders
-            </p>
+          <div className="space-y-2">
+            <div className="h-7 w-48 bg-gray-200 rounded-lg" />
+            <div className="h-4 w-64 bg-gray-100 rounded-lg" />
           </div>
+          <div className="h-11 w-full sm:w-80 bg-gray-200 rounded-2xl" />
         </div>
 
-        <div className="bg-gray-50/50 p-20 rounded-[2.5rem] border border-gray-100 text-center flex flex-col items-center justify-center gap-4 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-orange-600">
-            <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
-          <p className="text-xs font-bold text-gray-500 tracking-wide uppercase">
-            Loading your orders...
-          </p>
+        <div className="flex items-center gap-2 pb-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-10 w-28 bg-gray-200 rounded-2xl shrink-0" />
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-32 w-full bg-gray-100 rounded-[2rem]" />
+          ))}
         </div>
       </div>
     );
@@ -193,7 +220,7 @@ const filteredOrders = ordersArray.filter((order: any) => {
 
   if (isError) {
     return (
-      <div className="space-y-8 max-w-6xl mx-auto">
+      <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6">
         <div className="pb-6 border-b border-gray-100">
           <h1 className="text-2xl font-black tracking-tight text-gray-950">
             Food Item Orders
@@ -225,7 +252,7 @@ const filteredOrders = ordersArray.filter((order: any) => {
   // =========================
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6">
       {/* PAGE TITLE + SEARCH */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
         <div>
@@ -258,7 +285,7 @@ const filteredOrders = ordersArray.filter((order: any) => {
         {[
           { label: "All Orders", value: "all" },
           { label: "Processing", value: "processing" },
-          { label: "Delivered", value: "delivered" },
+          { label: "Completed", value: "completed" },
           { label: "Cancelled", value: "cancelled" },
         ].map((tab) => (
           <button
@@ -276,7 +303,7 @@ const filteredOrders = ordersArray.filter((order: any) => {
       </div>
 
       {/* ORDERS LIST */}
-      {filteredOrders.length === 0 ? (
+      {ordersArray.length === 0 ? (
         <div className="bg-gray-50/50 p-16 rounded-[2.5rem] border border-gray-100 text-center flex flex-col items-center justify-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-xs">
             <ShoppingBag size={28} />
@@ -292,7 +319,7 @@ const filteredOrders = ordersArray.filter((order: any) => {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredOrders.map((order) => (
+          {ordersArray.map((order) => (
             <div
               key={order.id}
               className="group bg-gradient-to-br from-white via-white to-gray-50/50 p-6 rounded-[2rem] border border-gray-200/70 shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.06)] hover:border-gray-300/80 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-6"

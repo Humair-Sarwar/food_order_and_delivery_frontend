@@ -29,7 +29,7 @@ const CustomerLayout = () => {
       title: "Food Item Orders",
       path: "/user/orders",
       icon: <ShoppingBag size={18} />,
-      badge: "3",
+      badge: undefined,
     },
     {
       title: "Wishlist",

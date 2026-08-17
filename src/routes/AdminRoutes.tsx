@@ -13,6 +13,7 @@ import { Customers } from "../pages/admin/Customers";
 import AdminSettings from "../pages/admin/Settings";
 import Orders from "../pages/admin/orders/Orders";
 import OrderDetail from "../pages/admin/orders/OrderDetail";
+import Report from "../pages/admin/Report";
 
 const AdminRoutes = () => {
   return (
@@ -30,6 +31,10 @@ const AdminRoutes = () => {
       <Route
         path="order/:id"
         element={<OrderDetail />}
+      />
+      <Route
+        path="reports"
+        element={<Report />}
       />
 
       <Route

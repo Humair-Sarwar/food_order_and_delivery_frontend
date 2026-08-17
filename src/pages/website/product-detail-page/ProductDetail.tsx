@@ -24,7 +24,7 @@ import { AddToCartToast } from "../../../components/common/AddToCartToast";
 
 export const ProductDetail: React.FC = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id }: any = useParams();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isCartToastOpen, setIsCartToastOpen] = useState(false);
@@ -416,7 +416,7 @@ export const ProductDetail: React.FC = () => {
           </div>
         </div>
       </div>
-      <RelatedProducts />
+      <RelatedProducts id={id}/>
       <AddToCartToast
   isOpen={isCartToastOpen}
   onClose={() => setIsCartToastOpen(false)}

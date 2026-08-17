@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { useWebsiteSettings } from '../../hooks/website/useFoodItems';
 
 export const ContactPage: React.FC = () => {
+  const {
+      data: settingsResponse,
+      isLoading,
+      isError,
+    } = useWebsiteSettings();
+    const settings: any = settingsResponse?.data;
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -62,7 +69,7 @@ export const ContactPage: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Phone Number</h4>
-                  <p className="text-gray-950 font-bold text-base sm:text-lg">+92 300 0000000</p>
+                  <a href={`tel:${settings?.phone || "+92 300 0000000"}`} className="text-gray-950 font-bold text-base sm:text-lg">{settings?.phone || "+92 300 0000000"}</a>
                   <p className="text-gray-500 text-xs mt-0.5">Mon - Sun: Always Open</p>
                 </div>
               </div>
@@ -74,7 +81,7 @@ export const ContactPage: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email Address</h4>
-                  <p className="text-gray-950 font-bold text-base sm:text-lg">hello@foodie.pk</p>
+                  <a href={`mailto:${settings?.email || "hello@ofods.pk"}`} className="text-gray-950 font-bold text-base sm:text-lg">{settings?.email || "hello@ofods.pk"}</a>
                   <p className="text-gray-500 text-xs mt-0.5">Online support anytime</p>
                 </div>
               </div>
