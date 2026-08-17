@@ -30,7 +30,22 @@ export const put = async <T>(
   return res.data;
 };
 
-export const del = async <T>(url: string): Promise<T> => {
-  const res: AxiosResponse<T> = await api.delete(url);
+export const del = async <T>(
+  url: string,
+  data?: any
+): Promise<T> => {
+  const res: AxiosResponse<T> = await api.delete(url, {
+    data,
+  });
+
+  return res.data;
+};
+
+
+export const patch = async <T>(
+  url: string,
+  data: any
+): Promise<T> => {
+  const res: AxiosResponse<T> = await api.patch(url, data);
   return res.data;
 };

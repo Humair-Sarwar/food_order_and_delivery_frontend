@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Search, 
-  Filter, 
   Eye, 
   Calendar, 
   CheckCircle2, 
@@ -11,10 +10,15 @@ import {
   CreditCard, 
   Wallet,
   ShoppingBag,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ChefHat,
+  PackageCheck,
+  Bike
 } from 'lucide-react';
 import { GenericTable } from '../../../components/common/GenericTable';
 import Pagination from '../../../components/common/Pagination';
+import { useAdminOrderLists, useOrderExportCsv } from '../../../hooks/admin/useOrder';
+import { useNavigate } from 'react-router-dom';
 
 // --- TypeScript Interfaces ---
 export interface OrderCustomer {
@@ -24,110 +28,158 @@ export interface OrderCustomer {
 
 export interface OrderItem {
   id: string;
+  order_number: string;
   date: string;
   customer: OrderCustomer;
   restaurant: string;
   amount: string;
-  payment: 'COD' | 'Digital Wallet' | 'Card Payment' | string;
-  status: 'Pending' | 'Processing' | 'Delivered' | 'Canceled';
+  payment: string;
+  status: string;
   icon: React.ComponentType<{ className?: string; size?: number }>;
   statusClass: string;
 }
 
 export interface TabConfig {
-  name: 'All' | 'Pending' | 'Processing' | 'Delivered' | 'Canceled';
-  count: string;
+  name: string;
+  statusValue?: string;
   color: string;
 }
 
 export default function Orders() {
-  const [activeTab, setActiveTab] = useState<TabConfig['name']>('All');
+  const {
+  mutate: exportCsv,
+  isPending: isExporting,
+} = useOrderExportCsv();
+  const [activeTab, setActiveTab] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [paymentFilter, setPaymentFilter] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
+  const navigate = useNavigate();
 
-  // Status Tab Configuration with specific dynamic color themes
+  // Status Tab Configuration mapped to Laravel migration enum
   const tabs: TabConfig[] = [
-    { name: 'All', count: '1,482', color: 'bg-gray-100 text-gray-700' },
-    { name: 'Pending', count: '12', color: 'bg-amber-500/10 text-amber-600' },
-    { name: 'Processing', count: '8', color: 'bg-blue-500/10 text-blue-600' },
-    { name: 'Delivered', count: '1,430', color: 'bg-emerald-500/10 text-emerald-600' },
-    { name: 'Canceled', count: '32', color: 'bg-red-500/10 text-red-600' }
+    { name: 'All', color: 'bg-gray-100 text-gray-700' },
+    { name: 'Pending', statusValue: 'pending', color: 'bg-amber-500/10 text-amber-600' },
+    { name: 'Confirmed', statusValue: 'confirmed', color: 'bg-blue-500/10 text-blue-600' },
+    { name: 'Preparing', statusValue: 'preparing', color: 'bg-indigo-500/10 text-indigo-600' },
+    { name: 'Ready', statusValue: 'ready_for_pickup', color: 'bg-purple-500/10 text-purple-600' },
+    { name: 'Out for Delivery', statusValue: 'out_for_delivery', color: 'bg-orange-500/10 text-orange-600' },
+    { name: 'Completed', statusValue: 'completed', color: 'bg-emerald-500/10 text-emerald-600' },
+    { name: 'Cancelled', statusValue: 'cancelled', color: 'bg-red-500/10 text-red-600' }
   ];
 
-  // Comprehensive data array built for specifications
-  const ordersData: OrderItem[] = [
-    {
-      id: "#ORD-9402",
-      date: "May 18, 2026 • 01:24 AM",
-      customer: { name: "Bilal Khan", phone: "+92 300 1234567" },
-      restaurant: "Spicy Bytes",
-      amount: "Rs: 42.50",
-      payment: "COD",
-      status: "Delivered",
-      icon: CheckCircle2,
-      statusClass: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-    },
-    {
-      id: "#ORD-9401",
-      date: "May 17, 2026 • 11:45 PM",
-      customer: { name: "Ayesha Ahmed", phone: "+92 321 9876543" },
-      restaurant: "Pizza Wave",
-      amount: "Rs: 18.90",
-      payment: "Digital Wallet",
-      status: "Pending",
-      icon: Clock,
-      statusClass: "bg-amber-500/10 text-amber-600 border-amber-500/20"
-    },
-    {
-      id: "#ORD-9400",
-      date: "May 17, 2026 • 10:15 PM",
-      customer: { name: "Zainab Raza", phone: "+92 333 4567890" },
-      restaurant: "Burger Lab",
-      amount: "Rs: 31.00",
-      payment: "Card Payment",
-      status: "Processing",
-      icon: Clock,
-      statusClass: "bg-blue-500/10 text-blue-600 border-blue-500/20"
-    },
-    {
-      id: "#ORD-9399",
-      date: "May 17, 2026 • 08:30 PM",
-      customer: { name: "Hamza Malik", phone: "+92 345 0001122" },
-      restaurant: "Subway Junction",
-      amount: "Rs: 12.40",
-      payment: "COD",
-      status: "Canceled",
-      icon: XCircle,
-      statusClass: "bg-red-500/10 text-red-600 border-red-500/20"
-    }
-  ];
+  // Pass active tab's status value directly to API hook
+  const activeTabConfig = tabs.find(t => t.name === activeTab);
 
-  // Filter logic helper mapping tabs and search queries
-  const filteredOrders = useMemo(() => {
-    return ordersData.filter(order => {
-      const matchesTab = activeTab === 'All' || order.status === activeTab;
-      const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            order.restaurant.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesTab && matchesSearch;
+  const {
+    data,
+    isPending,
+    isError,
+  } = useAdminOrderLists({
+    page,
+    per_page: perPage,
+    search: searchQuery || undefined,
+    status: activeTabConfig?.statusValue || undefined,
+    payment_method: paymentFilter || undefined,
+  });
+
+  const rawOrders: any = data?.data || [];
+  const pagination: any = data?.pagination;
+
+  // Map API response to OrderItem format
+  const ordersData: OrderItem[] = useMemo(() => {
+    return rawOrders?.map((order: any) => {
+      const statusLower = (order.status || 'pending').toLowerCase();
+      let statusLabel = 'Pending';
+      let statusClass = 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+      let StatusIcon = Clock;
+
+      switch (statusLower) {
+        case 'completed':
+          statusLabel = 'Completed';
+          statusClass = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+          StatusIcon = CheckCircle2;
+          break;
+        case 'confirmed':
+          statusLabel = 'Confirmed';
+          statusClass = 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+          StatusIcon = CheckCircle2;
+          break;
+        case 'preparing':
+          statusLabel = 'Preparing';
+          statusClass = 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20';
+          StatusIcon = ChefHat;
+          break;
+        case 'ready_for_pickup':
+          statusLabel = 'Ready For Pickup';
+          statusClass = 'bg-purple-500/10 text-purple-600 border-purple-500/20';
+          StatusIcon = PackageCheck;
+          break;
+        case 'out_for_delivery':
+          statusLabel = 'Out For Delivery';
+          statusClass = 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+          StatusIcon = Bike;
+          break;
+        case 'cancelled':
+          statusLabel = 'Cancelled';
+          statusClass = 'bg-red-500/10 text-red-600 border-red-500/20';
+          StatusIcon = XCircle;
+          break;
+        default:
+          statusLabel = 'Pending';
+          statusClass = 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+          StatusIcon = Clock;
+          break;
+      }
+
+      const formattedDate = order.created_at
+        ? new Date(order.created_at).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'N/A';
+
+      const customerName = order.user
+        ? `${order.user.first_name || ''} ${order.user.last_name || ''}`.trim()
+        : order.first_name
+        ? `${order.first_name} ${order.last_name || ''}`.trim()
+        : 'Guest User';
+
+      const customerPhone = order.phone || order.user?.phone || 'N/A';
+
+      return {
+        id: order.id,
+        order_number: order.order_number || `#ORD-${order.id.slice(0, 6)}`,
+        date: formattedDate,
+        customer: { name: customerName || 'Unknown', phone: customerPhone },
+        restaurant: order.restaurant?.name || 'Unknown Restaurant',
+        amount: `Rs. ${Number(order.total || 0).toFixed(2)}`,
+        payment: order.payment_method ? order.payment_method.toUpperCase() : 'COD',
+        status: statusLabel,
+        icon: StatusIcon,
+        statusClass,
+      };
     });
-  }, [activeTab, searchQuery]);
+  }, [rawOrders]);
 
   // --- GenericTable Column Definitions ---
   const columns = useMemo(() => [
     {
       header: "Order ID",
-      key: "id",
-      accessorKey: "id",     // Added for dynamic lookup mapping
-      dataIndex: "id",       // Fallback descriptor mapping
+      key: "order_number",
+      accessorKey: "order_number",
+      dataIndex: "order_number",
       className: "px-6 py-4 font-black text-gray-900 group-hover:text-orange-500 transition-colors",
-      render: (order: OrderItem) => order.id
+      render: (order: OrderItem) => order.order_number
     },
     {
       header: "Timeline",
       key: "timeline",
-      accessorKey: "date",   // Maps directly onto primary string field
+      accessorKey: "date",
       dataIndex: "date",
       className: "px-6 py-4 text-gray-500 whitespace-nowrap",
       render: (order: OrderItem) => (
@@ -140,7 +192,7 @@ export default function Orders() {
     {
       header: "Customer Details",
       key: "customer",
-      accessorKey: "customer", // Maps into object structure lookup
+      accessorKey: "customer",
       dataIndex: "customer",
       className: "px-6 py-4",
       render: (order: OrderItem) => (
@@ -174,7 +226,7 @@ export default function Orders() {
       className: "px-6 py-4 whitespace-nowrap",
       render: (order: OrderItem) => (
         <div className="flex items-center gap-1.5 text-gray-500">
-          {order.payment === 'COD' ? (
+          {order.payment === 'COD' || order.payment === 'CASH' ? (
             <Wallet className="w-3.5 h-3.5 text-amber-500" />
           ) : (
             <CreditCard className="w-3.5 h-3.5 text-blue-500" />
@@ -205,8 +257,13 @@ export default function Orders() {
       accessorKey: "actions",
       dataIndex: "actions",
       className: "px-6 py-4 text-center whitespace-nowrap",
-      render: () => (
-        <button className="h-8 w-8 inline-flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:text-orange-500 hover:border-orange-500/30 bg-white shadow-sm transition-all cursor-pointer active:scale-95">
+      render: (order: OrderItem) => (
+        <button 
+          onClick={() => {
+            navigate(`/admin/order/${order?.id}`)
+          }}
+          className="h-8 w-8 inline-flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:text-orange-500 hover:border-orange-500/30 bg-white shadow-sm transition-all cursor-pointer active:scale-95"
+        >
           <Eye className="w-4 h-4" />
         </button>
       )
@@ -227,10 +284,23 @@ export default function Orders() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 h-10 text-xs font-bold bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm transition-all active:scale-98 cursor-pointer self-start sm:self-auto">
-          <ArrowDownToLine className="w-4 h-4 text-gray-400" />
-          <span>Export Manifest</span>
-        </button>
+        <button
+  onClick={() => {
+    exportCsv({
+      search: searchQuery || undefined,
+      status: activeTabConfig?.statusValue || undefined,
+      payment_method: paymentFilter || undefined,
+    });
+  }}
+  disabled={isExporting}
+  className="flex items-center gap-2 px-4 h-10 text-xs font-bold bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  <ArrowDownToLine className="w-4 h-4 text-gray-400" />
+
+  <span>
+    {isExporting ? "Exporting..." : "Export Manifest"}
+  </span>
+</button>
       </div>
 
       {/* 2. DYNAMIC SEGMENTED STATUS TABS ROW */}
@@ -249,11 +319,13 @@ export default function Orders() {
             }`}
           >
             <span>{tab.name}</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-black rounded-md ${
-              activeTab === tab.name ? 'bg-white/20 text-white' : tab.color
-            }`}>
-              {tab.count}
-            </span>
+            {tab.name === 'All' && pagination?.total !== undefined && (
+              <span className={`px-1.5 py-0.5 text-[10px] font-black rounded-md ${
+                activeTab === tab.name ? 'bg-white/20 text-white' : tab.color
+              }`}>
+                {pagination.total}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -275,43 +347,62 @@ export default function Orders() {
         </div>
 
         <div className="relative">
-                <select
-                //   value={selectedCategory}
-                  onChange={(e) => {
-                    // setSelectedCategory(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full appearance-none text-xs font-semibold px-4 py-2.5 pr-8 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500/80 transition-all cursor-pointer shadow-sm text-gray-700"
-                >
-                  <option value="">Payment All</option>
-                  
-                    <option value="COD">Cash</option>
-                    <option value="COD">Card</option>
-                  
-                </select>
-                <SlidersHorizontal size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              </div>
+          <select
+            value={paymentFilter}
+            onChange={(e) => {
+              setPaymentFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full appearance-none text-xs font-semibold px-4 py-2.5 pr-8 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500/80 transition-all cursor-pointer shadow-sm text-gray-700"
+          >
+            <option value="">Payment All</option>
+            <option value="cod">Cash (COD)</option>
+            <option value="online">Online / Card</option>
+          </select>
+          <SlidersHorizontal size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        </div>
       </div>
 
       {/* 4. ORDERS MASTER DATA MATRIX TABLE CARD */}
       <div className="bg-white border border-gray-200/80 rounded-2xl shadow-sm overflow-hidden">
-        <GenericTable
-          data={filteredOrders}
-          columns={columns as any}
-          rowKey={(order: OrderItem) => order.id}
-          iconNo={<ShoppingBag className="w-[40px] h-[40px] text-gray-300" />}
-          emptyMessage="No records found matching current query configuration."
-        />
+        {isPending ? (
+          <div className="p-6 space-y-4 animate-pulse">
+            <div className="h-10 bg-gray-100 rounded-xl w-full" />
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-3 border-b border-gray-100 last:border-0">
+                <div className="h-4 bg-gray-100 rounded w-24" />
+                <div className="h-4 bg-gray-100 rounded w-32" />
+                <div className="h-4 bg-gray-100 rounded w-40" />
+                <div className="h-4 bg-gray-100 rounded w-28" />
+                <div className="h-4 bg-gray-100 rounded w-20" />
+                <div className="h-6 bg-gray-100 rounded-full w-24" />
+                <div className="h-8 w-8 bg-gray-100 rounded-xl" />
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="p-12 text-center text-xs font-bold text-red-500">
+            Failed to retrieve orders data. Please try again.
+          </div>
+        ) : (
+          <GenericTable
+            data={ordersData}
+            columns={columns as any}
+            rowKey={(order: OrderItem) => order.id}
+            iconNo={<ShoppingBag className="w-[40px] h-[40px] text-gray-300" />}
+            emptyMessage="No records found matching current query configuration."
+          />
+        )}
       </div>
 
       {/* 5. INTEGRATED CUSTOM PAGINATION COMPONENT */}
-      {filteredOrders.length > 0 && (
+      {pagination && pagination.last_page > 0 && (
         <Pagination
           currentPage={page}
-          totalPages={Math.ceil(filteredOrders.length / perPage) || 1}
-          totalEntries={filteredOrders.length}
-          from={((page - 1) * perPage) + 1}
-          to={Math.min(page * perPage, filteredOrders.length)}
+          totalPages={pagination.last_page}
+          totalEntries={pagination.total}
+          from={pagination.from}
+          to={pagination.to}
           entriesPerPage={perPage}
           onPageChange={(targetPage) => setPage(targetPage)}
           onEntriesPerPageChange={(newPerPage) => {

@@ -16,7 +16,6 @@ const api = axios.create({
 
   headers: {
     Accept: "application/json",
-    "Content-Type": "application/json",
   },
 
   withCredentials: false,
@@ -43,7 +42,18 @@ api.interceptors.response.use(
 
   (error) => {
     // Auto logout on unauthorized
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url;
+
+    const isAuthRequest =
+      url?.includes("/auth/login") ||
+      url?.includes("/auth/register");
+
+    // Only redirect to login if on a protected route
+    const isProtectedRoute = window.location.pathname.startsWith('/admin') || 
+                             window.location.pathname.startsWith('/user');
+
+    if (status === 401 && !isAuthRequest && isProtectedRoute) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
 
