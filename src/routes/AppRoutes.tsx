@@ -14,12 +14,15 @@ const AppRoutes = () => {
       <ScrollToTop />
       <TopProgressBar />
       <Routes>
+        {/* Public routes should come first */}
+        {WebsiteRoutes()}
+        {AuthRoutes()}
+        
+        {/* Protected routes */}
         <Route element={<ProtectedRoute allowedRole="admin"/>}>{AdminRoutes()}</Route>
 
         {/* {UserRoutes()} */}
 
-        {AuthRoutes()}
-        {WebsiteRoutes()}
         <Route element={<ProtectedRoute allowedRole="user" />}>
         {CustomerRoutes()}
         </Route>

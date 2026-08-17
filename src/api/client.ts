@@ -49,7 +49,11 @@ api.interceptors.response.use(
       url?.includes("/auth/login") ||
       url?.includes("/auth/register");
 
-    if (status === 401 && !isAuthRequest) {
+    // Only redirect to login if on a protected route
+    const isProtectedRoute = window.location.pathname.startsWith('/admin') || 
+                             window.location.pathname.startsWith('/user');
+
+    if (status === 401 && !isAuthRequest && isProtectedRoute) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
 

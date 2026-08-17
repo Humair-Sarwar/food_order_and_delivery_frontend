@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/images/logo.png";
 import banner_login from "../../assets/images/login-cover.jpg";
 import { useLogin } from "../../hooks/auth/useLogin";
@@ -17,6 +17,7 @@ interface FormData {
 const Login: React.FC = () => {
   const cartId = localStorage.getItem("cart_id");
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { mutate, isPending } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
@@ -84,8 +85,13 @@ const Login: React.FC = () => {
 
             toast.success(res?.message || "Success");
 
-            // Navigate without full reload
-            const targetPath = res.user.role === "admin" ? "/admin/dashboard" : "/user/dashboard";
+            // Redirect to the page the user was trying to access, or default to dashboard
+            const from = (location.state as any)?.from || null;
+            const targetPath = from 
+              ? from 
+              : res.user.role === "admin" 
+                ? "/admin/dashboard" 
+                : "/user/dashboard";
             navigate(targetPath, { replace: true });
           },
           onError: (err: any) => {
