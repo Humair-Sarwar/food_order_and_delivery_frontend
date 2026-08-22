@@ -1096,8 +1096,38 @@ useEffect(() => {
     </div>
 
     <div className="flex items-center gap-2 pl-7 flex-wrap pt-1">
-      {/* your existing payment icons */}
-    </div>
+                      <div className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg h-10 w-16 flex items-center justify-center shadow-2xs">
+                        <img
+                          src="/payment-icons/mastercard.png"
+                          alt="Mastercard"
+                          className="h-6 object-contain"
+                        />
+                      </div>
+
+                      <div className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg h-10 w-16 flex items-center justify-center shadow-2xs">
+                        <img
+                          src="/payment-icons/visa.png"
+                          alt="Visa"
+                          className="h-6 object-contain"
+                        />
+                      </div>
+
+                      <div className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg h-10 w-16 flex items-center justify-center shadow-2xs">
+                        <img
+                          src="/payment-icons/easypaisa.jpg"
+                          alt="Easypaisa"
+                          className="h-6 object-contain"
+                        />
+                      </div>
+
+                      <div className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg h-10 w-16 flex items-center justify-center shadow-2xs">
+                        <img
+                          src="/payment-icons/jazzcash.png"
+                          alt="JazzCash"
+                          className="h-6 object-contain"
+                        />
+                      </div>
+                    </div>
   </div>
 )}
 
