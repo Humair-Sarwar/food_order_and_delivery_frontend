@@ -141,14 +141,19 @@ export const ProductListingPage: React.FC = () => {
     restaurant: restaurantParam || undefined,
     category: categoryParam || undefined,
   });
-  const responseData = (data as any)?.data as WebFoodItemsResponse | undefined;
-  const foodItems: any[] = Array.isArray(responseData) 
-  ? responseData 
-  : (Array.isArray(responseData?.data) ? responseData.data : []);
-  const totalPages = responseData?.pagination?.last_page ?? 1;
-  const totalEntries = responseData?.pagination?.total ?? 0;
-  const from = responseData?.pagination?.from ?? 0;
-  const to = responseData?.pagination?.to ?? 0;
+
+  const apiData: any = data;
+
+  const foodItems = Array.isArray(apiData?.data)
+    ? apiData.data
+    : [];
+
+  const pagination = apiData?.pagination;
+
+  const totalPages = pagination?.last_page ?? 1;
+  const totalEntries = pagination?.total ?? 0;
+  const from = pagination?.from ?? 0;
+  const to = pagination?.to ?? 0;
 
   const calculatedMaxPrice = (Array.isArray(foodItems) ? foodItems : []).reduce((max: number, item: any) => {
     const p = Number(item?.regular_price) || 0;
@@ -563,7 +568,7 @@ export const ProductListingPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6">
-                  {foodItems.map((item, i) => {
+                  {foodItems.map((item: any, i: any) => {
                     const isOnSale = item?.is_on_sale === 1;
                     const regPrice = Number(item?.regular_price) || 0;
                     const salePrice = Number(item?.sale_price) || 0;
