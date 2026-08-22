@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const slides = [
   { 
@@ -21,7 +22,7 @@ const slides = [
 
 export const HeroSlider: React.FC = () => {
   const [index, setIndex] = useState(0);
-
+  const navigation = useNavigate();
   // Auto-slide logic triggered every 7 seconds
   useEffect(() => {
     const timer = setInterval(() => setIndex((prev) => (prev + 1) % slides.length), 7000);
@@ -61,7 +62,7 @@ export const HeroSlider: React.FC = () => {
                 </p>
                 
                 {/* Action Button */}
-                <button className="px-8 sm:px-10 py-3.5 sm:py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/30 cursor-pointer text-sm sm:text-base">
+                <button onClick={()=> navigation('/food-items/All')} className="px-8 sm:px-10 py-3.5 sm:py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-orange-600/30 cursor-pointer text-sm sm:text-base">
                   ORDER NOW
                 </button>
               </div>
