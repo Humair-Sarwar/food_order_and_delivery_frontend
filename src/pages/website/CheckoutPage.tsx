@@ -421,7 +421,7 @@ useEffect(() => {
 
     setErrors(newErrors);
 
-    if (!isValid) {
+    if (!isValid && (deliveryMethod == 'ship')) {
       toast.error("Please fill in all required shipping fields correctly.");
       return;
     }
